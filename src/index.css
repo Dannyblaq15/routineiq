@@ -1,6 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Geist:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
+/* Tailwind v4: enable .dark class-based dark mode */
+@variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-primary: #005c55;
   --color-primary-light: #0f766e;
@@ -16,7 +19,34 @@
 }
 
 @layer base {
+  *, *::before, *::after {
+    transition-property: background-color, border-color, color;
+    transition-duration: 200ms;
+    transition-timing-function: ease;
+  }
+
+  html {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
   body {
     font-family: var(--font-sans);
+    background-color: #f8fafc;
+    color: #0f172a;
   }
+
+  html.dark body {
+    background-color: #090d16;
+    color: #f1f5f9;
+  }
+}
+
+/* Utility: hide scrollbar while keeping scroll */
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 }

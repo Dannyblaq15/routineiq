@@ -6,35 +6,39 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { AnimatePresence, motion } from 'motion/react';
+import { Sparkles } from 'lucide-react';
+
 import Sidebar from '../components/Sidebar';
 import ReportAnalysis from '../components/ReportAnalysis';
 import InventoryManagement from '../components/InventoryManagement';
 import SettingsPanel from '../components/SettingsPanel';
 import AgentDashboard from '../components/AgentDashboard';
 import MemoryTimeline from '../components/MemoryTimeline';
+import OnboardingTour, { useOnboardingTour } from '../components/OnboardingTour';
 
 import { ScreenType, PatientAnalysis as PatientAnalysisType, InventoryItem } from '../types';
 import { recentAnalysesList, inventoryItemsList } from '../data';
-import { AnimatePresence, motion } from 'motion/react';
-import { Sparkles } from 'lucide-react';
 
-// ─── Screen title map ─────────────────────────────────────────────────────────
+// ─── Screen metadata ──────────────────────────────────────────────────────────
 
-const SCREEN_TITLES: Partial<Record<ScreenType, { title: string; subtitle: string }>> = {
-  'agent-dashboard': { title: 'Dashboard',        subtitle: '✦ Your agent is active' },
-  'memory-timeline': { title: 'My History',        subtitle: 'Everything your agent remembers' },
-  'agent-insights':  { title: 'Agent Insights',    subtitle: 'Autonomous decisions this week' },
-  'progress':        { title: 'My Progress',       subtitle: 'Adherence & skin improvement over time' },
-  'chat':            { title: 'Ask My Agent',      subtitle: 'Ask anything — answered from your history' },
-  'analysis':        { title: 'Upload Report',     subtitle: 'Add a dermatologist report to your memory' },
-  'inventory':       { title: 'My Products',       subtitle: 'Everything on your skincare shelf' },
-  'settings':        { title: 'Settings',          subtitle: 'Preferences and accessibility' },
+const SCREEN_META: Partial<Record<ScreenType, { title: string; subtitle: string }>> = {
+  'agent-dashboard': { title: 'Dashboard',       subtitle: '✦ Your agent is active' },
+  'memory-timeline': { title: 'My History',       subtitle: 'Everything your agent remembers' },
+  'agent-insights':  { title: 'Agent Insights',   subtitle: 'Autonomous decisions this week' },
+  'progress':        { title: 'My Progress',      subtitle: 'Adherence & skin improvement over time' },
+  'chat':            { title: 'Ask My Agent',     subtitle: 'Ask anything — answered from your history' },
+  'analysis':        { title: 'Upload Report',    subtitle: 'Add a dermatologist report to your memory' },
+  'inventory':       { title: 'My Products',      subtitle: 'Everything on your skincare shelf' },
+  'settings':        { title: 'Settings',         subtitle: 'Your preferences' },
 };
 
-// ─── Placeholder for screens coming soon ─────────────────────────────────────
+const AGENT_SCREENS: ScreenType[] = ['agent-dashboard', 'memory-timeline', 'agent-insights', 'progress', 'chat'];
+
+// ─── Coming-soon placeholder ──────────────────────────────────────────────────
 
 function ComingSoon({ screen, onBack }: { screen: ScreenType; onBack: () => void }) {
-  const info = SCREEN_TITLES[screen];
+  const meta = SCREEN_META[screen];
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -46,10 +50,10 @@ function ComingSoon({ screen, onBack }: { screen: ScreenType; onBack: () => void
         <Sparkles className="w-7 h-7 text-teal-500" />
       </div>
       <div>
-        <h2 className="font-display font-black text-xl text-slate-800 dark:text-white">{info?.title}</h2>
-        <p className="text-sm text-slate-400 mt-1 max-w-xs">{info?.subtitle}</p>
+        <h2 className="font-display font-black text-xl text-slate-800 dark:text-white">{meta?.title}</h2>
+        <p className="text-sm text-slate-400 dark:text-slate-500 mt-1 max-w-xs">{meta?.subtitle}</p>
       </div>
-      <p className="text-xs text-slate-400 italic">This screen is coming soon — building now ✦</p>
+      <p className="text-xs text-slate-400 dark:text-slate-500 italic">This screen is coming soon ✦</p>
       <button
         onClick={onBack}
         className="text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline"
@@ -67,6 +71,7 @@ export default function Page() {
   const [analyses, setAnalyses] = useState<PatientAnalysisType[]>(recentAnalysesList);
   const [inventory, setInventory] = useState<InventoryItem[]>(inventoryItemsList);
 
+  // Dark mode
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('routineiq-dark-mode');
@@ -76,125 +81,129 @@ export default function Page() {
     return false;
   });
 
-  const [fontSize, setFontSize] = useState<'sm' | 'md' | 'lg'>(() => {
-    if (typeof window !== 'undefined') {
-      return (localStorage.getItem('routineiq-font-size') as 'sm' | 'md' | 'lg') || 'md';
-    }
-    return 'md';
-  });
-
   useEffect(() => {
-    const root = window.document.documentElement;
+    const root = document.documentElement;
     darkMode ? root.classList.add('dark') : root.classList.remove('dark');
     localStorage.setItem('routineiq-dark-mode', String(darkMode));
   }, [darkMode]);
 
-  useEffect(() => {
-    localStorage.setItem('routineiq-font-size', fontSize);
-  }, [fontSize]);
+  // Onboarding tour
+  const { show: showTour, complete: completeTour, restart: restartTour } = useOnboardingTour();
 
-  const handleAddAnalysis = (item: PatientAnalysisType) => setAnalyses(prev => [item, ...prev]);
-  const handleAddInventory = (item: InventoryItem) => setInventory(prev => [item, ...prev]);
-  const handleDeleteInventory = (id: string) => setInventory(prev => prev.filter(i => i.id !== id));
+  const handleAddAnalysis = (item: PatientAnalysisType) => setAnalyses(p => [item, ...p]);
+  const handleAddInventory = (item: InventoryItem) => setInventory(p => [item, ...p]);
+  const handleDeleteInventory = (id: string) => setInventory(p => p.filter(i => i.id !== id));
 
-  const fontClass = { sm: 'text-xs md:text-sm', md: 'text-sm md:text-base', lg: 'text-base md:text-lg' }[fontSize];
-  const screenMeta = SCREEN_TITLES[currentScreen];
-  const isAgentScreen = ['agent-dashboard', 'memory-timeline', 'agent-insights', 'progress', 'chat'].includes(currentScreen);
+  const meta = SCREEN_META[currentScreen];
+  const isAgentScreen = AGENT_SCREENS.includes(currentScreen);
 
   return (
-    <div className={`min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-900 dark:text-slate-100 flex flex-col md:flex-row transition-colors duration-200 ${fontClass}`}>
+    <>
+      {/* ── Onboarding tour overlay ───────────────────────────────────────── */}
+      <AnimatePresence>
+        {showTour && <OnboardingTour onComplete={completeTour} />}
+      </AnimatePresence>
 
-      <Sidebar
-        currentScreen={currentScreen}
-        onScreenChange={setCurrentScreen}
-        darkMode={darkMode}
-        onToggleDarkMode={() => setDarkMode(d => !d)}
-        fontSize={fontSize}
-        onChangeFontSize={setFontSize}
-      />
+      {/* ── App shell ────────────────────────────────────────────────────── */}
+      <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-900 dark:text-slate-100 flex flex-col md:flex-row">
 
-      <main className="flex-1 min-w-0 flex flex-col py-6 px-4 md:px-8 max-w-4xl mx-auto w-full">
+        <Sidebar
+          currentScreen={currentScreen}
+          onScreenChange={setCurrentScreen}
+          darkMode={darkMode}
+          onToggleDarkMode={() => setDarkMode(d => !d)}
+        />
 
-        {/* ── Page header ──────────────────────────────────────────────────── */}
-        <header className="mb-6 flex items-center justify-between gap-4">
-          <div>
-            <h1 className="font-display font-black text-xl tracking-tight text-slate-900 dark:text-white">
-              {screenMeta?.title ?? 'RoutineIQ'}
-            </h1>
-            <p className="text-[11px] text-slate-400 mt-0.5">
-              {screenMeta?.subtitle ?? 'Your AI skincare agent'}
-            </p>
-          </div>
+        <main className="flex-1 min-w-0 flex flex-col py-6 px-4 md:px-8 max-w-4xl mx-auto w-full">
 
-          {/* Agent status badge */}
-          {isAgentScreen && (
-            <div className="flex items-center gap-2 bg-teal-50 dark:bg-teal-950/20 px-3.5 py-1.5 rounded-full border border-teal-500/20">
-              <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
-              <span className="text-[10px] font-bold text-teal-700 dark:text-teal-400 tracking-wider uppercase">Agent active</span>
+          {/* ── Page header ────────────────────────────────────────────────── */}
+          <header className="mb-6 flex items-center justify-between gap-4">
+            <div>
+              <h1 className="font-display font-black text-xl tracking-tight text-slate-900 dark:text-white">
+                {meta?.title ?? 'RoutineIQ'}
+              </h1>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+                {meta?.subtitle ?? 'Your AI skincare agent'}
+              </p>
             </div>
-          )}
-        </header>
 
-        {/* ── Screen content ────────────────────────────────────────────────── */}
-        <AnimatePresence mode="wait">
-          <div key={currentScreen} className="relative flex-1">
-
-            {currentScreen === 'agent-dashboard' && (
-              <AgentDashboard onScreenChange={setCurrentScreen} />
+            {isAgentScreen && (
+              <div className="flex items-center gap-2 bg-teal-50 dark:bg-teal-950/30 px-3.5 py-1.5 rounded-full border border-teal-200 dark:border-teal-800/40">
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
+                <span className="text-[10px] font-bold text-teal-700 dark:text-teal-400 tracking-wider uppercase">
+                  Agent active
+                </span>
+              </div>
             )}
+          </header>
 
-            {currentScreen === 'memory-timeline' && (
-              <MemoryTimeline />
-            )}
+          {/* ── Screen content ──────────────────────────────────────────────── */}
+          <AnimatePresence mode="wait">
+            <div key={currentScreen} className="flex-1">
 
-            {currentScreen === 'analysis' && (
-              <ReportAnalysis onAddAnalysis={handleAddAnalysis} />
-            )}
+              {currentScreen === 'agent-dashboard' && (
+                <AgentDashboard onScreenChange={setCurrentScreen} />
+              )}
 
-            {currentScreen === 'inventory' && (
-              <InventoryManagement
-                items={inventory}
-                onAddItem={handleAddInventory}
-                onDeleteItem={handleDeleteInventory}
+              {currentScreen === 'memory-timeline' && (
+                <MemoryTimeline />
+              )}
+
+              {currentScreen === 'analysis' && (
+                <ReportAnalysis onAddAnalysis={handleAddAnalysis} />
+              )}
+
+              {currentScreen === 'inventory' && (
+                <InventoryManagement
+                  items={inventory}
+                  onAddItem={handleAddInventory}
+                  onDeleteItem={handleDeleteInventory}
+                />
+              )}
+
+              {currentScreen === 'settings' && (
+                <SettingsPanel
+                  darkMode={darkMode}
+                  onToggleDarkMode={() => setDarkMode(d => !d)}
+                  onRestartTour={restartTour}
+                />
+              )}
+
+              {(currentScreen === 'agent-insights' || currentScreen === 'progress' || currentScreen === 'chat') && (
+                <ComingSoon screen={currentScreen} onBack={() => setCurrentScreen('agent-dashboard')} />
+              )}
+            </div>
+          </AnimatePresence>
+
+          {/* ── Footer ─────────────────────────────────────────────────────── */}
+          <footer className="mt-10 pt-6 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2.5">
+              <Image
+                src="/icon-192.png"
+                alt="RoutineIQ"
+                width={22}
+                height={22}
+                className="rounded-lg opacity-60 dark:opacity-40"
               />
-            )}
+              <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                © 2026 RoutineIQ · Powered by Qwen AI
+              </p>
+            </div>
+            <div className="flex items-center gap-4 text-[11px] text-slate-400 dark:text-slate-500">
+              <span className="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-2 py-1 rounded-full font-medium text-[10px]">
+                Not medical advice
+              </span>
+              <button
+                onClick={() => setCurrentScreen('settings')}
+                className="hover:text-teal-600 dark:hover:text-teal-400 transition font-medium"
+              >
+                Settings
+              </button>
+            </div>
+          </footer>
 
-            {currentScreen === 'settings' && (
-              <SettingsPanel
-                fontSize={fontSize}
-                onChangeFontSize={setFontSize}
-                darkMode={darkMode}
-                onToggleDarkMode={() => setDarkMode(d => !d)}
-              />
-            )}
-
-            {/* Coming soon: agent-insights, progress, chat */}
-            {(currentScreen === 'agent-insights' || currentScreen === 'progress' || currentScreen === 'chat') && (
-              <ComingSoon screen={currentScreen} onBack={() => setCurrentScreen('agent-dashboard')} />
-            )}
-          </div>
-        </AnimatePresence>
-
-        {/* ── Footer ───────────────────────────────────────────────────────── */}
-        <footer className="mt-10 pt-6 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <Image src="/icon-192.png" alt="RoutineIQ" width={24} height={24} className="rounded-lg opacity-70" />
-            <p className="text-[11px] text-slate-400">
-              © 2026 RoutineIQ · Powered by Qwen AI
-            </p>
-          </div>
-          <div className="flex items-center gap-4 text-[11px] text-slate-400">
-            <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full font-medium">Not medical advice</span>
-            <button
-              onClick={() => setCurrentScreen('settings')}
-              className="hover:text-teal-600 dark:hover:text-teal-400 transition font-medium"
-            >
-              Settings
-            </button>
-          </div>
-        </footer>
-
-      </main>
-    </div>
+        </main>
+      </div>
+    </>
   );
 }

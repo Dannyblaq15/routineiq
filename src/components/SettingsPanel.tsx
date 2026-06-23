@@ -1,3 +1,4 @@
+'use client';
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -5,50 +6,69 @@
 
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Settings, Bell, ShieldCheck, Mail, Smartphone, Save, Eye, EyeOff, KeyRound } from 'lucide-react';
-import { SettingItem } from '../types';
+import {
+  Bell, ShieldCheck, Save, Sun, Moon, KeyRound,
+  User, Mail, Smartphone, RefreshCw,
+} from 'lucide-react';
 
 interface SettingsPanelProps {
-  fontSize: 'sm' | 'md' | 'lg';
-  onChangeFontSize: (size: 'sm' | 'md' | 'lg') => void;
   darkMode: boolean;
   onToggleDarkMode: () => void;
+  onRestartTour: () => void;
+  // kept for compat but no-ops
+  fontSize?: 'sm' | 'md' | 'lg';
+  onChangeFontSize?: (size: 'sm' | 'md' | 'lg') => void;
+}
+
+function Toggle({
+  checked,
+  onChange,
+  label,
+}: {
+  checked: boolean;
+  onChange: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onChange}
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      className={`relative w-11 h-6 flex items-center rounded-full p-1 shrink-0 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900
+        ${checked ? 'bg-teal-600' : 'bg-slate-200 dark:bg-slate-700'}`}
+    >
+      <span className={`block w-4 h-4 rounded-full bg-white shadow-sm transform transition-transform duration-200 ${checked ? 'translate-x-5' : 'translate-x-0'}`} />
+    </button>
+  );
 }
 
 export default function SettingsPanel({
-  fontSize,
-  onChangeFontSize,
   darkMode,
-  onToggleDarkMode
+  onToggleDarkMode,
+  onRestartTour,
 }: SettingsPanelProps) {
-  const [notifications, setNotifications] = useState<SettingItem>({
-    email: true,
-    push: true,
-    sms: false,
-    routineCompliance: true,
-    inventoryAlerts: true,
-    clinicalIntelligence: true,
-    systemAlerts: false
+  const [notifications, setNotifications] = useState({
+    routineReminders: true,
+    agentInsights: true,
+    productAlerts: true,
+    weeklyReport: false,
   });
 
-  const [clinicName, setClinicName] = useState('Central Dermatology Lab');
-  const [supervisorEmail, setSupervisorEmail] = useState('director@routineiq.org');
-  const [isSaved, setIsSaved] = useState(false);
+  const [name, setName]   = useState('');
+  const [email, setEmail] = useState('');
+  const [saved, setSaved] = useState(false);
 
-  const toggleNotification = (key: keyof SettingItem) => {
-    setNotifications((prev) => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
-    setIsSaved(false);
+  const toggle = (key: keyof typeof notifications) => {
+    setNotifications(p => ({ ...p, [key]: !p[key] }));
+    setSaved(false);
   };
 
-  const handleSaveSettings = (e: React.FormEvent) => {
+  const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSaved(true);
-    setTimeout(() => {
-      setIsSaved(false);
-    }, 2500);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2500);
   };
 
   return (
@@ -57,202 +77,133 @@ export default function SettingsPanel({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -15 }}
       transition={{ duration: 0.35, ease: 'easeOut' }}
-      className="space-y-8 pb-12"
+      className="space-y-6 pb-12"
     >
-      <div>
-        <h2 className="font-display font-black text-2xl md:text-3xl text-slate-900 dark:text-white">Settings & Auditing Controls</h2>
-        <p className="text-xs text-slate-500 dark:text-slate-400">Manage notification thresholds, clinical database rules, UI scale multipliers, and agency profile details.</p>
-      </div>
+      {/* ── Appearance ─────────────────────────────────────────────────────── */}
+      <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-xs p-5 space-y-4">
+        <h2 className="font-display font-black text-sm text-slate-900 dark:text-white flex items-center gap-2">
+          {darkMode ? <Moon className="w-4 h-4 text-teal-400" /> : <Sun className="w-4 h-4 text-yellow-500" />}
+          Appearance
+        </h2>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        
-        {/* Col 1 & 2: Main Form Workspace (2/3 col) */}
-        <form onSubmit={handleSaveSettings} className="lg:col-span-2 space-y-6">
-          
-          {/* Section A: Profile Identity */}
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-xs space-y-4">
-            <h3 className="font-semibold text-sm text-slate-900 dark:text-white flex items-center gap-2 pb-2 border-b border-slate-50 dark:border-slate-800">
-              <Settings className="w-4 h-4 text-teal-600" />
-              Clinical Identity Settings
-            </h3>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Dark mode</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Switch between light and dark themes</p>
+          </div>
+          <Toggle checked={darkMode} onChange={onToggleDarkMode} label="Toggle dark mode" />
+        </div>
+      </section>
 
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label htmlFor="clinic-name" className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Authorized Clinic Name</label>
-                <input
-                  id="clinic-name"
-                  type="text"
-                  value={clinicName}
-                  onChange={(e) => { setClinicName(e.target.value); setIsSaved(false); }}
-                  className="w-full text-xs p-2.5 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 rounded-xl border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                />
+      {/* ── Notifications ─────────────────────────────────────────────────── */}
+      <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-xs p-5 space-y-4">
+        <h2 className="font-display font-black text-sm text-slate-900 dark:text-white flex items-center gap-2">
+          <Bell className="w-4 h-4 text-teal-500" />
+          Notifications
+        </h2>
+
+        <div className="space-y-4 divide-y divide-slate-100 dark:divide-slate-800">
+          {[
+            { key: 'routineReminders' as const, label: 'Routine reminders', desc: 'Daily nudge to complete your AM or PM steps' },
+            { key: 'agentInsights'    as const, label: 'Agent insights',    desc: 'When your agent has a new recommendation for you' },
+            { key: 'productAlerts'   as const, label: 'Product alerts',    desc: 'When a conflict is detected in your shelf' },
+            { key: 'weeklyReport'    as const, label: 'Weekly summary',    desc: 'A short recap of your routine progress each Sunday' },
+          ].map(({ key, label, desc }) => (
+            <div key={key} className="flex items-center justify-between gap-4 pt-4 first:pt-0">
+              <div>
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{label}</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{desc}</p>
               </div>
-
-              <div className="space-y-1">
-                <label htmlFor="supervisor-email" className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Supervisor Direct Email</label>
-                <input
-                  id="supervisor-email"
-                  type="email"
-                  value={supervisorEmail}
-                  onChange={(e) => { setSupervisorEmail(e.target.value); setIsSaved(false); }}
-                  className="w-full text-xs p-2.5 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 rounded-xl border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                />
-              </div>
+              <Toggle checked={notifications[key]} onChange={() => toggle(key)} label={`Toggle ${label}`} />
             </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Profile ───────────────────────────────────────────────────────── */}
+      <form onSubmit={handleSave} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-xs p-5 space-y-4">
+        <h2 className="font-display font-black text-sm text-slate-900 dark:text-white flex items-center gap-2">
+          <User className="w-4 h-4 text-teal-500" />
+          Your profile
+        </h2>
+
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <label htmlFor="settings-name" className="text-[11px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500 flex items-center gap-1">
+              <User className="w-3 h-3" /> Name
+            </label>
+            <input
+              id="settings-name"
+              type="text"
+              placeholder="Your name"
+              value={name}
+              onChange={e => { setName(e.target.value); setSaved(false); }}
+              className="w-full text-sm p-2.5 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 rounded-xl border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-300 dark:placeholder:text-slate-600"
+            />
           </div>
-
-          {/* Section B: Notifications Switchboard */}
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-xs space-y-4">
-            <h3 className="font-semibold text-sm text-slate-900 dark:text-white flex items-center gap-2 pb-2 border-b border-slate-50 dark:border-slate-800">
-              <Bell className="w-4 h-4 text-teal-600" />
-              Intelligence Broadcast Switchboard
-            </h3>
-
-            <div className="space-y-4 divide-y divide-slate-50 dark:divide-slate-800">
-              {/* Email Switch */}
-              <div className="pt-3 first:pt-0 flex items-center justify-between gap-4">
-                <div className="space-y-0.5">
-                  <h4 className="font-bold text-xs text-slate-850 dark:text-slate-250">Digestive Email Broadcasts</h4>
-                  <p className="text-[10px] text-slate-400 leading-relaxed">Transmit weekly aggregate clinical analytics directly to supervising physicians.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => toggleNotification('email')}
-                  className={`w-11 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-200 focus:outline-none
-                    ${notifications.email ? 'bg-teal-700' : 'bg-slate-200 dark:bg-slate-800'}`}
-                  aria-label="Toggle email notifications"
-                >
-                  <div className={`bg-white w-4 h-4 rounded-full shadow-md transform duration-200 ease-in-out ${notifications.email ? 'translate-x-5' : 'translate-x-0'}`} />
-                </button>
-              </div>
-
-              {/* Push Alarm */}
-              <div className="pt-3 flex items-center justify-between gap-4">
-                <div className="space-y-0.5">
-                  <h4 className="font-bold text-xs text-slate-850 dark:text-slate-250">Real-Time Mobile Device Pushes</h4>
-                  <p className="text-[10px] text-slate-400 leading-relaxed">Alert designated devices immediately upon severe chemical conflict detection during scanning.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => toggleNotification('push')}
-                  className={`w-11 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-200 focus:outline-none
-                    ${notifications.push ? 'bg-teal-700' : 'bg-slate-200 dark:bg-slate-800'}`}
-                  aria-label="Toggle mobile device push warnings"
-                >
-                  <div className={`bg-white w-4 h-4 rounded-full shadow-md transform duration-200 ease-in-out ${notifications.push ? 'translate-x-5' : 'translate-x-0'}`} />
-                </button>
-              </div>
-
-              {/* SMS Crisis alert */}
-              <div className="pt-3 flex items-center justify-between gap-4">
-                <div className="space-y-0.5">
-                  <h4 className="font-bold text-xs text-slate-850 dark:text-slate-250">Crisis SMS Cellular Warnings</h4>
-                  <p className="text-[10px] text-slate-400 leading-relaxed">Dispatch standard urgent cell warning text lines if system spots life hazard levels.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => toggleNotification('sms')}
-                  className={`w-11 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-200 focus:outline-none
-                    ${notifications.sms ? 'bg-teal-700' : 'bg-slate-200 dark:bg-slate-800'}`}
-                  aria-label="Toggle crisis SMS alerts"
-                >
-                  <div className={`bg-white w-4 h-4 rounded-full shadow-md transform duration-200 ease-in-out ${notifications.sms ? 'translate-x-5' : 'translate-x-0'}`} />
-                </button>
-              </div>
-
-              {/* Clinical Rule adherence checks */}
-              <div className="pt-3 flex items-center justify-between gap-4">
-                <div className="space-y-0.5">
-                  <h4 className="font-bold text-xs text-slate-850 dark:text-slate-250">Patient Compliance Alerts</h4>
-                  <p className="text-[10px] text-slate-400 leading-relaxed">Integrate historical checkout registers to guarantee strict routine compliance.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => toggleNotification('routineCompliance')}
-                  className={`w-11 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-200 focus:outline-none
-                    ${notifications.routineCompliance ? 'bg-teal-700' : 'bg-slate-200 dark:bg-slate-800'}`}
-                  aria-label="Toggle compliance tracking analytics alerts"
-                >
-                  <div className={`bg-white w-4 h-4 rounded-full shadow-md transform duration-200 ease-in-out ${notifications.routineCompliance ? 'translate-x-5' : 'translate-x-0'}`} />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Action trigger footer */}
-          <div className="flex justify-end items-center gap-3">
-            {isSaved && (
-              <span className="text-xs font-bold text-teal-650 flex items-center gap-1.5 animate-bounce">
-                <ShieldCheck className="w-4 h-4" /> Changes verified successfully.
-              </span>
-            )}
-            <button
-              type="submit"
-              className="px-6 py-2.5 bg-teal-750 hover:bg-teal-800 text-white font-bold text-xs rounded-xl uppercase transition cursor-pointer flex items-center gap-2"
-            >
-              <Save className="w-4 h-4" /> Save Preferences
-            </button>
-          </div>
-
-        </form>
-
-        {/* Column 3: Quick Accessibility Toggles & Guidelines (1/3 col) */}
-        <div className="space-y-6">
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-xs space-y-4">
-            <h3 className="font-semibold text-sm text-slate-900 dark:text-white flex items-center gap-2 pb-2 border-b border-slate-50 dark:border-slate-800">
-              <Mail className="w-4 h-4 text-teal-600" />
-              Accessibility Quick Panel
-            </h3>
-
-            <div className="space-y-4 text-xs leading-relaxed text-slate-650 dark:text-slate-350">
-              {/* Scaler detail */}
-              <div className="space-y-1">
-                <span className="block font-bold text-slate-400 uppercase text-[10px]">Active Font Sizer multiplier</span>
-                <p>RoutineIQ renders content respecting adjusted relative sizing. Toggle between sizes dynamically on the sidebar drawer, or specify below:</p>
-                <div className="grid grid-cols-3 gap-1 pt-1.5">
-                  {(['sm', 'md', 'lg'] as const).map((sz) => (
-                    <button
-                      key={sz}
-                      type="button"
-                      onClick={() => onChangeFontSize(sz)}
-                      className={`py-1.5 text-center text-xs font-bold rounded uppercase cursor-pointer transition
-                        ${fontSize === sz 
-                          ? 'bg-teal-50 dark:bg-teal-950/45 text-teal-850 dark:text-teal-300 border border-teal-550' 
-                          : 'bg-slate-50 hover:bg-slate-100 dark:bg-slate-850 dark:hover:bg-slate-800 text-slate-500'
-                        }`}
-                    >
-                      {sz}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Theme preference description */}
-              <div className="space-y-1">
-                <span className="block font-bold text-slate-400 uppercase text-[10px]">Theme Environment Layout</span>
-                <p>Choose high-contrast light theme built strictly for clinics, or modern slate twilight theme for high-comfort night shifts.</p>
-                <button
-                  type="button"
-                  onClick={onToggleDarkMode}
-                  className="w-full text-center py-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 font-semibold rounded-xl transition cursor-pointer text-[11px] uppercase border border-slate-100 dark:border-slate-800/80"
-                >
-                  Toggle {darkMode ? 'Light Theme View' : 'Dark Theme View'}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Security details checklist */}
-          <div className="bg-gradient-to-br from-teal-900/10 to-teal-900/20 dark:from-teal-950/20 p-6 rounded-2xl border border-teal-800/10 shadow-sm space-y-2">
-            <h4 className="font-bold text-xs text-teal-800 dark:text-teal-300 flex items-center gap-1.5 uppercase">
-              <KeyRound className="w-4 h-4" /> HIPAA Compliance Guarded
-            </h4>
-            <p className="text-[11px] text-teal-700 dark:text-teal-400 leading-relaxed">
-              Every analyzed file, patient record segment, and conflict history parsed locally inside RoutineIQ is filtered and stored locally in local Storage state cache. No clinical data is ever broadcast or sold to corporate advertisers.
-            </p>
+          <div className="space-y-1.5">
+            <label htmlFor="settings-email" className="text-[11px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500 flex items-center gap-1">
+              <Mail className="w-3 h-3" /> Email
+            </label>
+            <input
+              id="settings-email"
+              type="email"
+              placeholder="you@email.com"
+              value={email}
+              onChange={e => { setEmail(e.target.value); setSaved(false); }}
+              className="w-full text-sm p-2.5 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 rounded-xl border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-300 dark:placeholder:text-slate-600"
+            />
           </div>
         </div>
 
+        <div className="flex items-center justify-between pt-1">
+          {saved && (
+            <motion.span
+              initial={{ opacity: 0, x: -6 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="text-xs font-bold text-teal-600 dark:text-teal-400 flex items-center gap-1.5"
+            >
+              <ShieldCheck className="w-3.5 h-3.5" /> Saved!
+            </motion.span>
+          )}
+          {!saved && <span />}
+          <button
+            type="submit"
+            className="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-xl transition flex items-center gap-2"
+          >
+            <Save className="w-3.5 h-3.5" /> Save
+          </button>
+        </div>
+      </form>
+
+      {/* ── App ───────────────────────────────────────────────────────────── */}
+      <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-xs p-5 space-y-4">
+        <h2 className="font-display font-black text-sm text-slate-900 dark:text-white flex items-center gap-2">
+          <Smartphone className="w-4 h-4 text-teal-500" />
+          App
+        </h2>
+
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Replay onboarding tour</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">See the getting-started guide again</p>
+          </div>
+          <button
+            type="button"
+            onClick={onRestartTour}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition"
+          >
+            <RefreshCw className="w-3.5 h-3.5" /> Replay
+          </button>
+        </div>
+      </section>
+
+      {/* ── Privacy note ──────────────────────────────────────────────────── */}
+      <div className="flex items-start gap-3 p-4 rounded-2xl bg-teal-50 dark:bg-teal-950/20 border border-teal-200/50 dark:border-teal-800/30">
+        <KeyRound className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5" />
+        <p className="text-xs text-teal-700 dark:text-teal-300 leading-relaxed">
+          Your data stays on your device. RoutineIQ never sells or shares your skincare history with third parties.
+        </p>
       </div>
     </motion.div>
   );
