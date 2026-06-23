@@ -71,12 +71,10 @@ export default function Page() {
   const [analyses, setAnalyses] = useState<PatientAnalysisType[]>(recentAnalysesList);
   const [inventory, setInventory] = useState<InventoryItem[]>(inventoryItemsList);
 
-  // Dark mode
+  // Dark mode — defaults to LIGHT. Only restores from explicit user choice.
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('routineiq-dark-mode');
-      if (saved !== null) return saved === 'true';
-      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+      return localStorage.getItem('routineiq-dark-mode') === 'true';
     }
     return false;
   });
@@ -105,7 +103,7 @@ export default function Page() {
       </AnimatePresence>
 
       {/* ── App shell ────────────────────────────────────────────────────── */}
-      <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-900 dark:text-slate-100 flex flex-col md:flex-row">
+      <div className="min-h-screen bg-[#fafafa] dark:bg-[#090d16] text-slate-900 dark:text-slate-100 flex flex-col md:flex-row">
 
         <Sidebar
           currentScreen={currentScreen}

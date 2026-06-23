@@ -1,8 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Geist:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
-/* Tailwind v4: enable .dark class-based dark mode */
-@variant dark (&:where(.dark, .dark *));
+/*
+  Tailwind v4: class-based dark mode.
+  @custom-variant tells Tailwind that dark: utilities apply
+  whenever the element is inside an element with class="dark".
+*/
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   --color-primary: #005c55;
@@ -13,35 +17,32 @@
   --color-secondary-container: #d3e5f1;
   --color-tertiary: #005e3f;
   --color-tertiary-container: #99ffcd;
-  
+
   --font-sans: "Inter", sans-serif;
   --font-display: "Geist", "Inter", sans-serif;
 }
 
 @layer base {
+  /* Smooth theme transitions — exclude transforms/opacity for performance */
   *, *::before, *::after {
-    transition-property: background-color, border-color, color;
-    transition-duration: 200ms;
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-duration: 150ms;
     transition-timing-function: ease;
   }
 
+  /* Let the browser know which color scheme is active (affects scrollbars etc) */
   html {
     color-scheme: light;
   }
-
   html.dark {
     color-scheme: dark;
   }
 
+  /* Explicit light-mode base — #fafafa background */
   body {
     font-family: var(--font-sans);
-    background-color: #f8fafc;
+    background-color: #fafafa;
     color: #0f172a;
-  }
-
-  html.dark body {
-    background-color: #090d16;
-    color: #f1f5f9;
   }
 }
 
