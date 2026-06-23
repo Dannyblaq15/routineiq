@@ -158,32 +158,64 @@ export default function Sidebar({
         aria-label="Main navigation"
       >
         {/* ── Logo header ─────────────────────────────────────────────────── */}
-        <div className="px-4 py-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
-          <div className="flex items-center gap-2.5 overflow-hidden min-w-0">
-            <Image
-              src="/icon-192.png"
-              alt="RoutineIQ logo"
-              width={32}
-              height={32}
-              className="rounded-xl shrink-0"
-              priority
-            />
-            <div className={`transition-all duration-300 min-w-0 ${isCollapsed ? 'md:w-0 md:opacity-0 md:overflow-hidden' : 'opacity-100'}`}>
-              <h1 className="font-display font-black text-base text-teal-800 dark:text-teal-300 leading-none tracking-tight whitespace-nowrap">
-                RoutineIQ
-              </h1>
-              <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mt-0.5 whitespace-nowrap">
-                AI Skincare Agent
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="hidden md:flex p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 dark:text-slate-500 transition shrink-0"
-            aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-          </button>
+        <div className={`border-b border-slate-100 dark:border-slate-800 transition-all duration-300 ${
+          isCollapsed ? 'px-0 py-4 flex justify-center' : 'px-4 py-4 flex items-center justify-between'
+        }`}>
+          {isCollapsed ? (
+            /* ── Collapsed: large centred logo with glow ring + click to expand ── */
+            <button
+              onClick={() => setIsCollapsed(false)}
+              aria-label="Expand sidebar"
+              className="group relative flex items-center justify-center w-12 h-12 rounded-2xl
+                bg-teal-50 dark:bg-teal-950/60
+                ring-2 ring-teal-200 dark:ring-teal-700/60
+                shadow-[0_0_12px_0_rgba(20,184,166,0.18)] dark:shadow-[0_0_16px_0_rgba(20,184,166,0.22)]
+                hover:ring-teal-400 dark:hover:ring-teal-500
+                hover:shadow-[0_0_18px_0_rgba(20,184,166,0.30)]
+                transition-all duration-200"
+            >
+              <Image
+                src="/icon-192.png"
+                alt="RoutineIQ"
+                width={36}
+                height={36}
+                className="rounded-xl"
+                priority
+              />
+              {/* Expand hint on hover */}
+              <ChevronRight className="absolute -right-1 -bottom-1 w-3.5 h-3.5 text-teal-600 dark:text-teal-400
+                opacity-0 group-hover:opacity-100 transition bg-white dark:bg-slate-900 rounded-full p-0.5 shadow" />
+            </button>
+          ) : (
+            /* ── Expanded: logo + wordmark + collapse button ── */
+            <>
+              <div className="flex items-center gap-2.5 overflow-hidden min-w-0">
+                <Image
+                  src="/icon-192.png"
+                  alt="RoutineIQ logo"
+                  width={32}
+                  height={32}
+                  className="rounded-xl shrink-0"
+                  priority
+                />
+                <div className="min-w-0">
+                  <h1 className="font-display font-black text-base text-teal-800 dark:text-teal-300 leading-none tracking-tight whitespace-nowrap">
+                    RoutineIQ
+                  </h1>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mt-0.5 whitespace-nowrap">
+                    AI Skincare Agent
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsCollapsed(true)}
+                className="hidden md:flex p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 dark:text-slate-500 transition shrink-0"
+                aria-label="Collapse sidebar"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+            </>
+          )}
         </div>
 
         {/* ── Navigation ──────────────────────────────────────────────────── */}
