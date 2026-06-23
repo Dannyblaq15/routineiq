@@ -210,7 +210,7 @@ function RoutineCard({ onNavigate }: { onNavigate: (s: ScreenType) => void }) {
 
       {/* Steps */}
       <div className="px-5 py-4 space-y-2">
-        <AnimatePresence mode="wait">
+        <AnimatePresence>
           {steps.map((step, idx) => (
             <motion.div
               key={step.id}

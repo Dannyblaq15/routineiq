@@ -112,7 +112,7 @@ export default function Page() {
           onToggleDarkMode={() => setDarkMode(d => !d)}
         />
 
-        <main className="flex-1 min-w-0 flex flex-col py-6 px-4 md:px-8 max-w-4xl mx-auto w-full">
+        <main className="flex-1 min-w-0 flex flex-col py-6 px-4 md:px-10 overflow-y-auto">
 
           {/* ── Page header ────────────────────────────────────────────────── */}
           <header className="mb-6 flex items-center justify-between gap-4">
