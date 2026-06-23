@@ -1,40 +1,76 @@
+'use client';
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use client';
-
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import Sidebar from '../components/Sidebar';
-import HomeOverview from '../components/HomeOverview';
 import ReportAnalysis from '../components/ReportAnalysis';
 import InventoryManagement from '../components/InventoryManagement';
-import IntelligenceEngine from '../components/IntelligenceEngine';
-import PatientAnalytics from '../components/PatientAnalytics';
-import Landing from '../components/Landing';
 import SettingsPanel from '../components/SettingsPanel';
 import AgentDashboard from '../components/AgentDashboard';
 import MemoryTimeline from '../components/MemoryTimeline';
 
 import { ScreenType, PatientAnalysis as PatientAnalysisType, InventoryItem } from '../types';
 import { recentAnalysesList, inventoryItemsList } from '../data';
-import { AnimatePresence } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import { Sparkles } from 'lucide-react';
+
+// ─── Screen title map ─────────────────────────────────────────────────────────
+
+const SCREEN_TITLES: Partial<Record<ScreenType, { title: string; subtitle: string }>> = {
+  'agent-dashboard': { title: 'Dashboard',        subtitle: '✦ Your agent is active' },
+  'memory-timeline': { title: 'My History',        subtitle: 'Everything your agent remembers' },
+  'agent-insights':  { title: 'Agent Insights',    subtitle: 'Autonomous decisions this week' },
+  'progress':        { title: 'My Progress',       subtitle: 'Adherence & skin improvement over time' },
+  'chat':            { title: 'Ask My Agent',      subtitle: 'Ask anything — answered from your history' },
+  'analysis':        { title: 'Upload Report',     subtitle: 'Add a dermatologist report to your memory' },
+  'inventory':       { title: 'My Products',       subtitle: 'Everything on your skincare shelf' },
+  'settings':        { title: 'Settings',          subtitle: 'Preferences and accessibility' },
+};
+
+// ─── Placeholder for screens coming soon ─────────────────────────────────────
+
+function ComingSoon({ screen, onBack }: { screen: ScreenType; onBack: () => void }) {
+  const info = SCREEN_TITLES[screen];
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0 }}
+      className="flex flex-col items-center justify-center py-28 gap-5 text-center"
+    >
+      <div className="w-16 h-16 rounded-2xl bg-teal-50 dark:bg-teal-950/30 flex items-center justify-center">
+        <Sparkles className="w-7 h-7 text-teal-500" />
+      </div>
+      <div>
+        <h2 className="font-display font-black text-xl text-slate-800 dark:text-white">{info?.title}</h2>
+        <p className="text-sm text-slate-400 mt-1 max-w-xs">{info?.subtitle}</p>
+      </div>
+      <p className="text-xs text-slate-400 italic">This screen is coming soon — building now ✦</p>
+      <button
+        onClick={onBack}
+        className="text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline"
+      >
+        ← Back to Dashboard
+      </button>
+    </motion.div>
+  );
+}
+
+// ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function Page() {
   const [currentScreen, setCurrentScreen] = useState<ScreenType>('agent-dashboard');
   const [analyses, setAnalyses] = useState<PatientAnalysisType[]>(recentAnalysesList);
   const [inventory, setInventory] = useState<InventoryItem[]>(inventoryItemsList);
-  
-  // Accessibility & Pref States
+
   const [darkMode, setDarkMode] = useState<boolean>(() => {
-    // Standard system preference matching
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('routineiq-dark-mode');
-      if (saved !== null) {
-        return saved === 'true';
-      }
+      if (saved !== null) return saved === 'true';
       return window.matchMedia('(prefers-color-scheme: dark)').matches;
     }
     return false;
@@ -42,188 +78,123 @@ export default function Page() {
 
   const [fontSize, setFontSize] = useState<'sm' | 'md' | 'lg'>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('routineiq-font-size');
-      return (saved as 'sm' | 'md' | 'lg') || 'md';
+      return (localStorage.getItem('routineiq-font-size') as 'sm' | 'md' | 'lg') || 'md';
     }
     return 'md';
   });
 
-  // Toggle Dark Mode Class
   useEffect(() => {
     const root = window.document.documentElement;
-    if (darkMode) {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
+    darkMode ? root.classList.add('dark') : root.classList.remove('dark');
     localStorage.setItem('routineiq-dark-mode', String(darkMode));
   }, [darkMode]);
 
-  // Save Font Size multiplier
   useEffect(() => {
     localStorage.setItem('routineiq-font-size', fontSize);
   }, [fontSize]);
 
-  const handleToggleDarkMode = () => {
-    setDarkMode(!darkMode);
-  };
+  const handleAddAnalysis = (item: PatientAnalysisType) => setAnalyses(prev => [item, ...prev]);
+  const handleAddInventory = (item: InventoryItem) => setInventory(prev => [item, ...prev]);
+  const handleDeleteInventory = (id: string) => setInventory(prev => prev.filter(i => i.id !== id));
 
-  const handleAddAnalysis = (newAnalysis: PatientAnalysisType) => {
-    setAnalyses((prev) => [newAnalysis, ...prev]);
-  };
-
-  const handleOpenAnalysis = (id: string) => {
-    // Jump straight to analysis tab to review details
-    setCurrentScreen('analysis');
-  };
-
-  const handleAddInventory = (newItem: InventoryItem) => {
-    setInventory((prev) => [newItem, ...prev]);
-  };
-
-  const handleDeleteInventory = (id: string) => {
-    setInventory((prev) => prev.filter((item) => item.id !== id));
-  };
-
-  // Switch display sizing text-scaling
-  const fontClassMultiplier = {
-    sm: 'text-xs md:text-sm',
-    md: 'text-sm md:text-base',
-    lg: 'text-base md:text-lg'
-  }[fontSize];
+  const fontClass = { sm: 'text-xs md:text-sm', md: 'text-sm md:text-base', lg: 'text-base md:text-lg' }[fontSize];
+  const screenMeta = SCREEN_TITLES[currentScreen];
+  const isAgentScreen = ['agent-dashboard', 'memory-timeline', 'agent-insights', 'progress', 'chat'].includes(currentScreen);
 
   return (
-    <div className={`min-h-screen bg-[#fafbfc] dark:bg-[#090d16] text-[#1e293b] dark:text-[#f8fafc] flex flex-col md:flex-row transition-colors duration-200 ${fontClassMultiplier}`}>
-      
-      {/* Retractable responsive Sidebar */}
+    <div className={`min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-900 dark:text-slate-100 flex flex-col md:flex-row transition-colors duration-200 ${fontClass}`}>
+
       <Sidebar
         currentScreen={currentScreen}
         onScreenChange={setCurrentScreen}
         darkMode={darkMode}
-        onToggleDarkMode={handleToggleDarkMode}
+        onToggleDarkMode={() => setDarkMode(d => !d)}
         fontSize={fontSize}
         onChangeFontSize={setFontSize}
       />
 
-      {/* Main Panel Viewport */}
-      <main className="flex-1 min-w-0 flex flex-col justify-between py-6 px-4 md:px-8 max-w-7xl mx-auto w-full">
-        <div>
-          
-          {/* Actionable Screen Headings & Navigation */}
-          <header className="mb-6 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <span className="p-2 bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-400 rounded-xl">
-                <Sparkles className="w-5 h-5" />
-              </span>
-            <div>
-                <h1 className="font-display font-black text-xl tracking-tight text-slate-900 dark:text-white">
-                  {currentScreen === 'agent-dashboard' ? 'Agent Dashboard'
-                    : currentScreen === 'memory-timeline' ? 'Memory Timeline'
-                    : currentScreen === 'agent-insights' ? 'Agent Insights'
-                    : currentScreen === 'progress' ? 'Progress'
-                    : currentScreen === 'chat' ? 'Chat with Agent'
-                    : 'RoutineIQ Workspace'}
-                </h1>
-                <p className="text-[10px] uppercase font-bold text-slate-400">
-                  {(['agent-dashboard','memory-timeline','agent-insights','progress','chat'].includes(currentScreen))
-                    ? 'Powered by Qwen MemoryAgent'
-                    : 'Secure Local Instance'}
-                </p>
-              </div>
+      <main className="flex-1 min-w-0 flex flex-col py-6 px-4 md:px-8 max-w-4xl mx-auto w-full">
+
+        {/* ── Page header ──────────────────────────────────────────────────── */}
+        <header className="mb-6 flex items-center justify-between gap-4">
+          <div>
+            <h1 className="font-display font-black text-xl tracking-tight text-slate-900 dark:text-white">
+              {screenMeta?.title ?? 'RoutineIQ'}
+            </h1>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              {screenMeta?.subtitle ?? 'Your AI skincare agent'}
+            </p>
+          </div>
+
+          {/* Agent status badge */}
+          {isAgentScreen && (
+            <div className="flex items-center gap-2 bg-teal-50 dark:bg-teal-950/20 px-3.5 py-1.5 rounded-full border border-teal-500/20">
+              <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
+              <span className="text-[10px] font-bold text-teal-700 dark:text-teal-400 tracking-wider uppercase">Agent active</span>
             </div>
+          )}
+        </header>
 
-            {/* Quick status pill */}
-            <div className="flex items-center gap-2 bg-teal-50 dark:bg-teal-950/20 px-3.5 py-1.5 rounded-full border border-teal-500/10">
-              <span className="w-2 h-2 rounded-full bg-teal-600 animate-pulse" />
-              <span className="text-[10px] font-bold text-teal-800 dark:text-teal-400 tracking-wider uppercase">
-                {(['agent-dashboard','memory-timeline','agent-insights','progress','chat'].includes(currentScreen))
-                  ? '✦ MemoryAgent Active'
-                  : 'Active Cohort Guarded'
-                }
-              </span>
-            </div>
-          </header>
+        {/* ── Screen content ────────────────────────────────────────────────── */}
+        <AnimatePresence mode="wait">
+          <div key={currentScreen} className="relative flex-1">
 
-          {/* Page screen routing frame */}
-          <AnimatePresence mode="wait">
-            <div key={currentScreen} className="relative">
-              {currentScreen === 'agent-dashboard' && (
-                <AgentDashboard onScreenChange={setCurrentScreen} />
-              )}
-              {currentScreen === 'memory-timeline' && (
-                <MemoryTimeline />
-              )}
-              {currentScreen === 'landing' && (
-                <Landing onScreenChange={setCurrentScreen} />
-              )}
-              {currentScreen === 'home' && (
-                <HomeOverview 
-                  onScreenChange={setCurrentScreen} 
-                  analyses={analyses} 
-                  onOpenAnalysis={handleOpenAnalysis} 
-                />
-              )}
-              {currentScreen === 'analysis' && (
-                <ReportAnalysis onAddAnalysis={handleAddAnalysis} />
-              )}
-              {currentScreen === 'inventory' && (
-                <InventoryManagement 
-                  items={inventory} 
-                  onAddItem={handleAddInventory} 
-                  onDeleteItem={handleDeleteInventory} 
-                />
-              )}
-              {currentScreen === 'intelligence' && (
-                <IntelligenceEngine />
-              )}
-              {currentScreen === 'analytics' && (
-                <PatientAnalytics />
-              )}
-              {currentScreen === 'settings' && (
-                <SettingsPanel 
-                  fontSize={fontSize} 
-                  onChangeFontSize={setFontSize} 
-                  darkMode={darkMode} 
-                  onToggleDarkMode={handleToggleDarkMode} 
-                />
-              )}
-              {/* Placeholder screens (to be built next) */}
-              {(currentScreen === 'agent-insights' || currentScreen === 'progress' || currentScreen === 'chat') && (
-                <div className="flex flex-col items-center justify-center py-24 gap-4 text-slate-400">
-                  <Sparkles className="w-10 h-10 opacity-30" />
-                  <p className="text-sm font-semibold capitalize">{currentScreen.replace('-', ' ')} — coming soon</p>
-                  <button onClick={() => setCurrentScreen('agent-dashboard')} className="text-xs text-teal-600 hover:underline">← Back to dashboard</button>
-                </div>
-              )}
-            </div>
-          </AnimatePresence>
+            {currentScreen === 'agent-dashboard' && (
+              <AgentDashboard onScreenChange={setCurrentScreen} />
+            )}
 
-        </div>
+            {currentScreen === 'memory-timeline' && (
+              <MemoryTimeline />
+            )}
 
-        {/* Global Access Footprint */}
-        <footer className="pt-8 border-t border-slate-100 dark:border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-400">
-          <p>© 2026 RoutineIQ Clinical Systems. Built & hosted locally.</p>
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setCurrentScreen('settings')} 
-              className="hover:text-teal-700 dark:hover:text-teal-400 transition"
-              aria-label="Direct link to UI/UX settings"
+            {currentScreen === 'analysis' && (
+              <ReportAnalysis onAddAnalysis={handleAddAnalysis} />
+            )}
+
+            {currentScreen === 'inventory' && (
+              <InventoryManagement
+                items={inventory}
+                onAddItem={handleAddInventory}
+                onDeleteItem={handleDeleteInventory}
+              />
+            )}
+
+            {currentScreen === 'settings' && (
+              <SettingsPanel
+                fontSize={fontSize}
+                onChangeFontSize={setFontSize}
+                darkMode={darkMode}
+                onToggleDarkMode={() => setDarkMode(d => !d)}
+              />
+            )}
+
+            {/* Coming soon: agent-insights, progress, chat */}
+            {(currentScreen === 'agent-insights' || currentScreen === 'progress' || currentScreen === 'chat') && (
+              <ComingSoon screen={currentScreen} onBack={() => setCurrentScreen('agent-dashboard')} />
+            )}
+          </div>
+        </AnimatePresence>
+
+        {/* ── Footer ───────────────────────────────────────────────────────── */}
+        <footer className="mt-10 pt-6 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <Image src="/icon-192.png" alt="RoutineIQ" width={24} height={24} className="rounded-lg opacity-70" />
+            <p className="text-[11px] text-slate-400">
+              © 2026 RoutineIQ · Powered by Qwen AI
+            </p>
+          </div>
+          <div className="flex items-center gap-4 text-[11px] text-slate-400">
+            <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full font-medium">Not medical advice</span>
+            <button
+              onClick={() => setCurrentScreen('settings')}
+              className="hover:text-teal-600 dark:hover:text-teal-400 transition font-medium"
             >
-              Auditing Controls
-            </button>
-            <span>•</span>
-            <button 
-              onClick={() => setCurrentScreen('landing')} 
-              className="hover:text-teal-700 dark:hover:text-teal-400 transition"
-              aria-label="View product features page"
-            >
-              Dermatologist Product Info
+              Settings
             </button>
           </div>
         </footer>
 
       </main>
-
     </div>
   );
 }
