@@ -14,14 +14,16 @@ import IntelligenceEngine from '../components/IntelligenceEngine';
 import PatientAnalytics from '../components/PatientAnalytics';
 import Landing from '../components/Landing';
 import SettingsPanel from '../components/SettingsPanel';
+import AgentDashboard from '../components/AgentDashboard';
+import MemoryTimeline from '../components/MemoryTimeline';
 
 import { ScreenType, PatientAnalysis as PatientAnalysisType, InventoryItem } from '../types';
 import { recentAnalysesList, inventoryItemsList } from '../data';
 import { AnimatePresence } from 'motion/react';
-import { Brain } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 export default function Page() {
-  const [currentScreen, setCurrentScreen] = useState<ScreenType>('landing');
+  const [currentScreen, setCurrentScreen] = useState<ScreenType>('agent-dashboard');
   const [analyses, setAnalyses] = useState<PatientAnalysisType[]>(recentAnalysesList);
   const [inventory, setInventory] = useState<InventoryItem[]>(inventoryItemsList);
   
@@ -111,14 +113,21 @@ export default function Page() {
           <header className="mb-6 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <span className="p-2 bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-400 rounded-xl">
-                <Brain className="w-5 h-5" />
+                <Sparkles className="w-5 h-5" />
               </span>
-              <div>
+            <div>
                 <h1 className="font-display font-black text-xl tracking-tight text-slate-900 dark:text-white">
-                  RoutineIQ Workspace
+                  {currentScreen === 'agent-dashboard' ? 'Agent Dashboard'
+                    : currentScreen === 'memory-timeline' ? 'Memory Timeline'
+                    : currentScreen === 'agent-insights' ? 'Agent Insights'
+                    : currentScreen === 'progress' ? 'Progress'
+                    : currentScreen === 'chat' ? 'Chat with Agent'
+                    : 'RoutineIQ Workspace'}
                 </h1>
                 <p className="text-[10px] uppercase font-bold text-slate-400">
-                  Secure Local Instance
+                  {(['agent-dashboard','memory-timeline','agent-insights','progress','chat'].includes(currentScreen))
+                    ? 'Powered by Qwen MemoryAgent'
+                    : 'Secure Local Instance'}
                 </p>
               </div>
             </div>
@@ -126,13 +135,24 @@ export default function Page() {
             {/* Quick status pill */}
             <div className="flex items-center gap-2 bg-teal-50 dark:bg-teal-950/20 px-3.5 py-1.5 rounded-full border border-teal-500/10">
               <span className="w-2 h-2 rounded-full bg-teal-600 animate-pulse" />
-              <span className="text-[10px] font-bold text-teal-800 dark:text-teal-400 tracking-wider uppercase">Active Cohort Guarded</span>
+              <span className="text-[10px] font-bold text-teal-800 dark:text-teal-400 tracking-wider uppercase">
+                {(['agent-dashboard','memory-timeline','agent-insights','progress','chat'].includes(currentScreen))
+                  ? '✦ MemoryAgent Active'
+                  : 'Active Cohort Guarded'
+                }
+              </span>
             </div>
           </header>
 
           {/* Page screen routing frame */}
           <AnimatePresence mode="wait">
             <div key={currentScreen} className="relative">
+              {currentScreen === 'agent-dashboard' && (
+                <AgentDashboard onScreenChange={setCurrentScreen} />
+              )}
+              {currentScreen === 'memory-timeline' && (
+                <MemoryTimeline />
+              )}
               {currentScreen === 'landing' && (
                 <Landing onScreenChange={setCurrentScreen} />
               )}
@@ -166,6 +186,14 @@ export default function Page() {
                   darkMode={darkMode} 
                   onToggleDarkMode={handleToggleDarkMode} 
                 />
+              )}
+              {/* Placeholder screens (to be built next) */}
+              {(currentScreen === 'agent-insights' || currentScreen === 'progress' || currentScreen === 'chat') && (
+                <div className="flex flex-col items-center justify-center py-24 gap-4 text-slate-400">
+                  <Sparkles className="w-10 h-10 opacity-30" />
+                  <p className="text-sm font-semibold capitalize">{currentScreen.replace('-', ' ')} — coming soon</p>
+                  <button onClick={() => setCurrentScreen('agent-dashboard')} className="text-xs text-teal-600 hover:underline">← Back to dashboard</button>
+                </div>
               )}
             </div>
           </AnimatePresence>

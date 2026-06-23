@@ -7,6 +7,7 @@ import RoutineScoreEngine from './RoutineScoreEngine';
 import { recentAnalysesList } from '../data';
 import { Microscope, Brain, AlertOctagon, TrendingUp, Sparkles, ArrowRight, Activity, BadgeAlert } from 'lucide-react';
 import { ScreenType, PatientAnalysis } from '../types';
+import { motion } from 'motion/react';
 
 interface HomeOverviewProps {
   onScreenChange: (screen: ScreenType) => void;

@@ -8,7 +8,6 @@ import {
   Home, 
   Microscope, 
   Package, 
-  Calendar, 
   Brain, 
   BarChart2, 
   Settings, 
@@ -19,7 +18,12 @@ import {
   Sun, 
   Moon, 
   Sparkles,
-  Type
+  Type,
+  LayoutDashboard,
+  BookOpen,
+  Lightbulb,
+  TrendingUp,
+  MessageSquare,
 } from 'lucide-react';
 import { ScreenType } from '../types';
 
@@ -43,14 +47,22 @@ export default function Sidebar({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const menuItems = [
+  const agentItems = [
+    { id: 'agent-dashboard' as ScreenType, label: 'Agent Dashboard', icon: LayoutDashboard },
+    { id: 'memory-timeline' as ScreenType, label: 'Memory Timeline', icon: BookOpen },
+    { id: 'agent-insights' as ScreenType, label: 'Agent Insights', icon: Lightbulb },
+    { id: 'progress' as ScreenType, label: 'Progress', icon: TrendingUp },
+    { id: 'chat' as ScreenType, label: 'Chat with Agent', icon: MessageSquare },
+  ];
+
+  const legacyItems = [
     { id: 'landing' as ScreenType, label: 'RoutineIQ Info', icon: Sparkles },
     { id: 'home' as ScreenType, label: 'Home Overview', icon: Home },
     { id: 'analysis' as ScreenType, label: 'Report Analysis', icon: Microscope },
-    { id: 'inventory' as ScreenType, label: 'Inventory Opt', icon: Package },
-    { id: 'intelligence' as ScreenType, label: 'Intelligence Matrix', icon: Brain },
-    { id: 'analytics' as ScreenType, label: 'Patient Analytics', icon: BarChart2 },
-    { id: 'settings' as ScreenType, label: 'Settings Panel', icon: Settings },
+    { id: 'inventory' as ScreenType, label: 'Inventory', icon: Package },
+    { id: 'intelligence' as ScreenType, label: 'Intelligence', icon: Brain },
+    { id: 'analytics' as ScreenType, label: 'Analytics', icon: BarChart2 },
+    { id: 'settings' as ScreenType, label: 'Settings', icon: Settings },
   ];
 
   const handleNav = (screen: ScreenType) => {
@@ -113,15 +125,22 @@ export default function Sidebar({
         </div>
 
         {/* Navigation Items */}
-        <nav className="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto" aria-label="Main menu">
-          {menuItems.map((item) => {
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto" aria-label="Main menu">
+
+          {/* MemoryAgent section */}
+          <div className={`text-[9px] font-black uppercase tracking-widest text-teal-600 dark:text-teal-500 px-4 pb-1 pt-1 flex items-center gap-1.5 ${isCollapsed ? 'justify-center' : ''}`}>
+            <Sparkles className="w-3 h-3" />
+            <span className={isCollapsed ? 'md:hidden' : 'inline'}>MemoryAgent</span>
+          </div>
+
+          {agentItems.map((item) => {
             const IconComponent = item.icon;
             const isActive = currentScreen === item.id;
             return (
               <button
                 key={item.id}
                 onClick={() => handleNav(item.id)}
-                className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200 cursor-pointer group text-left
+                className={`w-full flex items-center gap-3.5 px-4 py-2.5 rounded-xl transition-all duration-200 cursor-pointer group text-left
                   ${isActive 
                     ? 'bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 font-semibold border-l-4 border-teal-700 dark:border-teal-400 shadow-sm' 
                     : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white'
@@ -130,7 +149,38 @@ export default function Sidebar({
                 title={isCollapsed ? item.label : undefined}
               >
                 <IconComponent className={`w-5 h-5 shrink-0 ${isActive ? 'text-teal-700 dark:text-teal-400' : 'text-slate-500 group-hover:text-slate-800 dark:group-hover:text-white'}`} />
-                <span className={`text-[14px] transition-all duration-300 whitespace-nowrap ${isCollapsed ? 'md:hidden md:opacity-0' : 'opacity-100'}`}>
+                <span className={`text-[13px] transition-all duration-300 whitespace-nowrap ${isCollapsed ? 'md:hidden md:opacity-0' : 'opacity-100'}`}>
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
+
+          {/* Divider */}
+          <div className="my-2 mx-3 h-px bg-slate-200 dark:bg-slate-800" />
+
+          {/* Legacy section */}
+          <div className={`text-[9px] font-black uppercase tracking-widest text-slate-400 px-4 pb-1 pt-1 ${isCollapsed ? 'text-center' : ''}`}>
+            <span className={isCollapsed ? 'md:hidden' : 'inline'}>Classic</span>
+          </div>
+
+          {legacyItems.map((item) => {
+            const IconComponent = item.icon;
+            const isActive = currentScreen === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleNav(item.id)}
+                className={`w-full flex items-center gap-3.5 px-4 py-2.5 rounded-xl transition-all duration-200 cursor-pointer group text-left
+                  ${isActive 
+                    ? 'bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 font-semibold border-l-4 border-teal-700 dark:border-teal-400 shadow-sm' 
+                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                aria-current={isActive ? 'page' : undefined}
+                title={isCollapsed ? item.label : undefined}
+              >
+                <IconComponent className={`w-5 h-5 shrink-0 ${isActive ? 'text-teal-700 dark:text-teal-400' : 'text-slate-500 group-hover:text-slate-800 dark:group-hover:text-white'}`} />
+                <span className={`text-[13px] transition-all duration-300 whitespace-nowrap ${isCollapsed ? 'md:hidden md:opacity-0' : 'opacity-100'}`}>
                   {item.label}
                 </span>
               </button>
