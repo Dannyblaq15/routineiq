@@ -193,7 +193,7 @@ export default function InventoryManagement({ items, onAddItem, onDeleteItem }: 
             {/* Lifespan Type alert */}
             <div className="space-y-1">
               <label htmlFor="prod-status-type" className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Shelf Warning Level</label>
-              <div className="grid grid-cols-4 gap-1.5">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
                 {(['success', 'normal', 'warning', 'error'] as const).map((t) => (
                   <button
                     key={t}
@@ -311,7 +311,7 @@ export default function InventoryManagement({ items, onAddItem, onDeleteItem }: 
           </div>
 
           {/* List transition container */}
-          <div className="grid sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <AnimatePresence>
               {filteredItems.map((item) => {
                 const isExcellent = item.compatibility >= 90;

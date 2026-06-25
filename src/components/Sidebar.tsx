@@ -76,7 +76,7 @@ function NavItem({
         style={{ width: 18, height: 18, flexShrink: 0 }}
         className={isActive ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-200'}
       />
-      <span className={`text-[13px] whitespace-nowrap ${isCollapsed ? 'md:hidden' : 'opacity-100'}`}>
+      <span className={`text-[13px] whitespace-nowrap ${isCollapsed ? 'lg:hidden' : 'opacity-100'}`}>
         {item.label}
       </span>
     </button>
@@ -88,7 +88,7 @@ function NavItem({
 function SectionLabel({ label, isCollapsed }: { label: string; isCollapsed: boolean }) {
   return (
     <p className={`px-3 pt-3 pb-1 text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 ${isCollapsed ? 'text-center' : ''}`}>
-      <span className={isCollapsed ? 'md:hidden' : ''}>{label}</span>
+      <span className={isCollapsed ? 'lg:hidden' : ''}>{label}</span>
     </p>
   );
 }
@@ -112,7 +112,7 @@ export default function Sidebar({
   return (
     <>
       {/* ── Mobile top bar ─────────────────────────────────────────────────── */}
-      <div className="flex md:hidden items-center justify-between px-4 py-3 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40">
+      <div className="flex lg:hidden items-center justify-between px-4 py-3 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40">
         <div className="flex items-center gap-2">
           <Image src="/icon-192.png" alt="RoutineIQ logo" width={28} height={28} className="rounded-lg" />
           <span className="font-display font-black text-lg text-teal-800 dark:text-teal-300 tracking-tight">RoutineIQ</span>
@@ -140,7 +140,7 @@ export default function Sidebar({
       {mobileOpen && (
         <div
           onClick={() => setMobileOpen(false)}
-          className="md:hidden fixed inset-0 bg-black/40 z-40"
+          className="lg:hidden fixed inset-0 bg-black/40 z-40"
           aria-hidden="true"
         />
       )}
@@ -152,8 +152,8 @@ export default function Sidebar({
           border-r border-slate-200 dark:border-slate-800
           transition-all duration-300 transform
           ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
-          md:translate-x-0 md:relative
-          ${isCollapsed ? 'md:w-[68px]' : 'md:w-60'}
+          lg:translate-x-0 lg:relative
+          ${isCollapsed ? 'lg:w-[68px]' : 'lg:w-60'}
           shrink-0`}
         aria-label="Main navigation"
       >
@@ -209,7 +209,7 @@ export default function Sidebar({
               </div>
               <button
                 onClick={() => setIsCollapsed(true)}
-                className="hidden md:flex p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 dark:text-slate-500 transition shrink-0"
+                className="hidden lg:flex p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 dark:text-slate-500 transition shrink-0"
                 aria-label="Collapse sidebar"
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -262,7 +262,7 @@ export default function Sidebar({
               ? <Sun className="w-4 h-4 text-yellow-400 shrink-0" />
               : <Moon className="w-4 h-4 text-teal-600 shrink-0" />
             }
-            <span className={`whitespace-nowrap ${isCollapsed ? 'md:hidden' : ''}`}>
+            <span className={`whitespace-nowrap ${isCollapsed ? 'lg:hidden' : ''}`}>
               {darkMode ? 'Light mode' : 'Dark mode'}
             </span>
           </button>

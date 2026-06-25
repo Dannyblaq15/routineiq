@@ -482,9 +482,16 @@ export default function AgentDashboard({ onScreenChange }: AgentDashboardProps) 
     >
       <AgentStatusCard onNavigate={onScreenChange} />
       <QuickStats onNavigate={onScreenChange} />
-      <RoutineCard onNavigate={onScreenChange} />
-      <RoutineScoreCard score={ROUTINE_SCORE} onNavigate={onScreenChange} />
-      <InsightsFeed decisions={PENDING_DECISIONS} onNavigate={onScreenChange} />
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
+        <div className="lg:col-span-2 space-y-5">
+          <RoutineCard onNavigate={onScreenChange} />
+          <InsightsFeed decisions={PENDING_DECISIONS} onNavigate={onScreenChange} />
+        </div>
+        <div className="space-y-5">
+          <RoutineScoreCard score={ROUTINE_SCORE} onNavigate={onScreenChange} />
+        </div>
+      </div>
     </motion.div>
   );
 }
