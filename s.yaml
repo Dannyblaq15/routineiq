@@ -1,0 +1,28 @@
+edition: 3.0.0
+name: routineiq-app
+access: "default"
+
+vars:
+  region: "ap-southeast-1"
+  serviceName: "routineiq"
+
+resources:
+  routineiq_nextjs:
+    component: fc3
+    props:
+      region: ${vars.region}
+      functionName: "routineiq-web"
+      description: "RoutineIQ Next.js Backend on Alibaba Cloud FC"
+      # Custom Container is the most reliable way to deploy Next.js standalone
+      customContainerConfig:
+        image: "registry.ap-southeast-1.aliyuncs.com/YOUR_NAMESPACE/routineiq:latest"
+        port: 9000
+      memorySize: 1024
+      timeout: 60
+      # Required for Next.js HTTP server
+      triggers:
+        - triggerName: http-trigger
+          triggerType: http
+          triggerConfig:
+            authType: anonymous
+            methods: [GET, POST, PUT, DELETE]

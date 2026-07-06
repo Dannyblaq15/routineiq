@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { LineChart, BarChart2, Activity, PieChart, ShieldAlert, Sparkles, Clipboard, ArrowUpRight } from 'lucide-react';
 
@@ -14,7 +14,7 @@ interface AnalyticsDataPoint {
   complianceRate: number;
 }
 
-const HISTORICAL_SERIES: AnalyticsDataPoint[] = [
+const DEFAULT_HISTORICAL_SERIES: AnalyticsDataPoint[] = [
   { month: 'May 2026', scans: 14, conflicts: 2, complianceRate: 88 },
   { month: 'Jun 2026', scans: 19, conflicts: 1, complianceRate: 91 },
   { month: 'Jul 2026', scans: 25, conflicts: 4, complianceRate: 82 },
@@ -23,7 +23,7 @@ const HISTORICAL_SERIES: AnalyticsDataPoint[] = [
   { month: 'Oct 2026', scans: 52, conflicts: 2, complianceRate: 94 },
 ];
 
-const CONDITION_DISTRIBUTION = [
+const DEFAULT_CONDITION_DISTRIBUTION = [
   { name: 'Epidermal Barrier Integrity', percentage: 42, color: 'bg-teal-600', fill: '#005c55' },
   { name: 'Active Acne Inflammation', percentage: 28, color: 'bg-rose-500', fill: '#f43f5e' },
   { name: 'Solar Hyperpigmentation', percentage: 18, color: 'bg-amber-500', fill: '#f59e0b' },
@@ -32,8 +32,34 @@ const CONDITION_DISTRIBUTION = [
 
 export default function PatientAnalytics() {
   const [activeTab, setActiveTab] = useState<'scans' | 'compliance'>('scans');
+  const [historicalSeries, setHistoricalSeries] = useState<AnalyticsDataPoint[]>(DEFAULT_HISTORICAL_SERIES);
+  const [conditionDistribution, setConditionDistribution] = useState(DEFAULT_CONDITION_DISTRIBUTION);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const maxScans = Math.max(...HISTORICAL_SERIES.map(d => d.scans));
+  useEffect(() => {
+    async function fetchProgress() {
+      setIsLoading(true);
+      try {
+        const res = await fetch('/api/patient-progress', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ inventory: [], usageHistory: [] })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.historicalSeries) setHistoricalSeries(data.historicalSeries);
+          if (data.conditionDistribution) setConditionDistribution(data.conditionDistribution);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchProgress();
+  }, []);
+
+  const maxScans = Math.max(...historicalSeries.map(d => d.scans), 1);
   const maxCompliance = 100;
 
   return (
@@ -93,7 +119,7 @@ export default function PatientAnalytics() {
               <div className="absolute inset-x-0 top-1/3 border-t border-slate-100/60 dark:border-slate-800/40 pointer-events-none" />
               <div className="absolute inset-x-0 top-2/3 border-t border-slate-100/60 dark:border-slate-800/40 pointer-events-none" />
 
-              {HISTORICAL_SERIES.map((data, idx) => {
+              {historicalSeries.map((data, idx) => {
                 const targetValue = activeTab === 'scans' ? data.scans : data.complianceRate;
                 const maxValue = activeTab === 'scans' ? maxScans : maxCompliance;
                 const barHeightPercent = (targetValue / maxValue) * 100;
@@ -160,9 +186,14 @@ export default function PatientAnalytics() {
               <p className="text-[10px] text-slate-400">Diagnosis segments extracted by OCR models</p>
             </div>
 
-            <div className="space-y-3">
-              {CONDITION_DISTRIBUTION.map((cond, i) => (
-                <div key={i} className="space-y-1">
+            <div className="space-y-4 relative">
+              {isLoading && (
+                <div className="absolute inset-0 bg-white/50 dark:bg-slate-900/50 flex items-center justify-center z-10 rounded-xl backdrop-blur-sm">
+                  <Activity className="w-5 h-5 text-teal-600 animate-spin" />
+                </div>
+              )}
+              {conditionDistribution.map((cond, i) => (
+                <div key={cond.name} className="flex flex-col gap-1.5">
                   <div className="flex justify-between items-center text-xs">
                     <span className="font-medium text-slate-700 dark:text-slate-300">{cond.name}</span>
                     <span className="font-mono font-bold text-slate-900 dark:text-slate-350">{cond.percentage}%</span>

@@ -2,19 +2,37 @@
 <img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
 </div>
 
-# Run and deploy your AI Studio app
+# RoutineIQ
 
-This contains everything you need to run your app locally.
+RoutineIQ is an AI-powered dermatology assistant that tracks routines and logs side effects.
 
-View your app in AI Studio: https://ai.studio/apps/fa23f2d5-ff81-4402-8955-66280fb9e107
+## Deployment (Alibaba Cloud)
+
+- **Backend:** Alibaba Cloud Function Compute (Web Function, Node.js), region ap-southeast-1
+- **Database:** ApsaraDB RDS Serverless (MySQL), auto-pause enabled
+- **AI Model:** Qwen Cloud API (Qwen-Max) via dashscope-intl.aliyuncs.com
+- **Networking:** Private VPC connecting Function Compute to RDS
+- **Live endpoint:** [your-function-endpoint-url]
+- **Proof of Alibaba Cloud usage:** [See src/lib/db.ts](https://github.com/USERNAME/routineiq/blob/main/src/lib/db.ts)
+
+## Architecture
+
+```mermaid
+flowchart TD
+    A[User / Frontend (Next.js)] -->|HTTP request| B[Alibaba Cloud Function Compute <br> Backend API]
+    
+    subgraph VPC [Alibaba Cloud VPC ap-southeast-1]
+        B -->|SQL Queries| C[(ApsaraDB RDS Serverless <br> MySQL)]
+        B -->|API Calls| D[Qwen Cloud API <br> dashscope-intl.aliyuncs.com]
+    end
+```
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
-
+**Prerequisites:** Node.js
 
 1. Install dependencies:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+2. Set your environment variables in `.env` (Database, Alibaba Cloud credentials).
 3. Run the app:
    `npm run dev`

@@ -15,6 +15,7 @@ import InventoryManagement from '../components/InventoryManagement';
 import SettingsPanel from '../components/SettingsPanel';
 import AgentDashboard from '../components/AgentDashboard';
 import MemoryTimeline from '../components/MemoryTimeline';
+import AgentChat from '../components/AgentChat';
 import OnboardingTour, { useOnboardingTour } from '../components/OnboardingTour';
 
 import { ScreenType, PatientAnalysis as PatientAnalysisType, InventoryItem } from '../types';
@@ -71,19 +72,26 @@ export default function Page() {
   const [analyses, setAnalyses] = useState<PatientAnalysisType[]>(recentAnalysesList);
   const [inventory, setInventory] = useState<InventoryItem[]>(inventoryItemsList);
 
-  // Dark mode — defaults to LIGHT. Only restores from explicit user choice.
-  const [darkMode, setDarkMode] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('routineiq-dark-mode') === 'true';
-    }
-    return false;
-  });
+  // Dark mode
+  const [darkMode, setDarkMode] = useState<boolean>(false);
+  const [isMounted, setIsMounted] = useState<boolean>(false);
 
   useEffect(() => {
+    setIsMounted(true);
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('routineiq-dark-mode');
+      if (stored === 'true') {
+        setDarkMode(true);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isMounted) return;
     const root = document.documentElement;
     darkMode ? root.classList.add('dark') : root.classList.remove('dark');
     localStorage.setItem('routineiq-dark-mode', String(darkMode));
-  }, [darkMode]);
+  }, [darkMode, isMounted]);
 
   // Onboarding tour
   const { show: showTour, complete: completeTour, restart: restartTour } = useOnboardingTour();
@@ -166,7 +174,11 @@ export default function Page() {
                 />
               )}
 
-              {(currentScreen === 'agent-insights' || currentScreen === 'progress' || currentScreen === 'chat') && (
+              {currentScreen === 'chat' && (
+                <AgentChat onNavigate={setCurrentScreen} />
+              )}
+
+              {(currentScreen === 'agent-insights' || currentScreen === 'progress') && (
                 <ComingSoon screen={currentScreen} onBack={() => setCurrentScreen('agent-dashboard')} />
               )}
             </div>

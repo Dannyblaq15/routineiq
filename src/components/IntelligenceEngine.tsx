@@ -41,22 +41,37 @@ export default function IntelligenceEngine() {
   const handleDiagnoseSynergy = async () => {
     setIsMatching(true);
     setResult(null);
-    await new Promise((resolve) => setTimeout(resolve, 600));
 
-    const pathA = INGREDIENT_SYNERGY_MATRIX[chemicalA.toLowerCase()];
-    const entry = pathA ? pathA[chemicalB.toLowerCase()] : null;
-
-    const pathB = INGREDIENT_SYNERGY_MATRIX[chemicalB.toLowerCase()];
-    const reverseEntry = pathB ? pathB[chemicalA.toLowerCase()] : null;
-
-    const final = entry || reverseEntry || {
-      status: 'safe' as const,
-      compatibility: 90,
-      description: 'No known dynamic chemical conflict found in RoutineIQ database for high-grade substances. Safe for concurrent application.'
-    };
-
-    setResult(final);
-    setIsMatching(false);
+    try {
+      const res = await fetch('/api/analyze-chemicals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chemicals: [chemicalA, chemicalB] })
+      });
+      
+      if (!res.ok) throw new Error('Analysis failed');
+      
+      const data = await res.json();
+      
+      // Map Qwen API format back to the expected internal format
+      setResult({
+        status: data.status ? data.status.toLowerCase() as 'safe' | 'warning' | 'danger' : 'safe',
+        compatibility: data.compatibilityScore || 90,
+        description: data.interactions && data.interactions.length > 0 
+          ? data.interactions[0].description 
+          : data.recommendation || 'No known dynamic chemical conflict found.'
+      });
+    } catch (err) {
+      console.error(err);
+      // Fallback
+      setResult({
+        status: 'safe',
+        compatibility: 90,
+        description: 'Unable to connect to intelligence engine at this time.'
+      });
+    } finally {
+      setIsMatching(false);
+    }
   };
 
   const handleSelectPreset = (a: string, b: string) => {

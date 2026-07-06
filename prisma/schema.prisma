@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model AgentEpisode {
+  id                String   @id @default(cuid())
+  episodeType       String
+  title             String
+  summary           String   @db.Text
+  occurredAt        DateTime @default(now())
+  relatedEntityType String?
+  relatedEntityId   String?
+  agentId           String?
+  isVisibleToUser   Boolean  @default(true)
+}
+
+model AgentPreference {
+  id                 String   @id @default("1")
+  complexity         String   @default("moderate")
+  amMaxSteps         Int      @default(3)
+  pmMaxSteps         Int      @default(4)
+  fragranceSensitive Boolean  @default(false)
+  budgetMonthlyAvg   Float    @default(50.0)
+  brandAvoidance     Json?
+  confidenceScore    Float    @default(0.8)
+}
+
+model PatientAnalysis {
+  id        String   @id @default(cuid())
+  type      String
+  clinician String
+  status    String   @default("PENDING")
+  severity  String?
+  date      DateTime @default(now())
+}
+
+model InventoryItem {
+  id            String   @id @default(cuid())
+  name          String
+  phase         String
+  category      String
+  compatibility Int      @default(100)
+  tags          Json?
+  statusText    String
+  imageUrl      String
+  statusType    String
+}

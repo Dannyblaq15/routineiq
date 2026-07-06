@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Package, ShieldCheck, AlertCircle, Trash, Plus, Sparkles, Filter, Check, Search, X, Tag } from 'lucide-react';
+import { Package, ShieldCheck, AlertCircle, Trash, Plus, Sparkles, Filter, Check, Search, X, Tag, Camera, Loader2 } from 'lucide-react';
 import { InventoryItem } from '../types';
 
 interface InventoryManagementProps {
@@ -31,8 +31,47 @@ export default function InventoryManagement({ items, onAddItem, onDeleteItem }: 
   const [phaseFilter, setPhaseFilter] = useState<string>('All');
   const [categoryFilter, setCategoryFilter] = useState<string>('All');
   const [searchTerm, setSearchTerm] = useState('');
+  
+  const [isScanning, setIsScanning] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleAddNewItem = (e: React.FormEvent) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsScanning(true);
+    try {
+      const base64Image = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const res = await fetch('/api/scan-product', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: base64Image })
+      });
+      
+      if (!res.ok) throw new Error('Scan failed');
+      
+      const data = await res.json();
+      
+      if (data.name) setName(data.name);
+      if (data.phase) setPhase(data.phase);
+      if (data.category) setCategory(data.category);
+      if (data.tags) setRawTags(data.tags.join(', '));
+      if (data.compatibility) setCompatibility(data.compatibility);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsScanning(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleAddNewItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
 
@@ -52,6 +91,27 @@ export default function InventoryManagement({ items, onAddItem, onDeleteItem }: 
     };
 
     onAddItem(newItem);
+    
+    // Log to memory timeline
+    try {
+      await fetch('/api/memory', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'add_episode',
+          payload: {
+            episodeType: 'product_added',
+            title: `${name} added to shelf`,
+            summary: `Manually or AI-scanned. Key ingredients: ${newItem.tags.join(', ')}. Compatibility: ${compatibility}/100.`,
+            relatedEntityType: 'product',
+            isVisibleToUser: true,
+          }
+        })
+      });
+    } catch (err) {
+      console.error('Failed to log product to memory:', err);
+    }
+
     setName('');
     setRawTags('');
     setCategory('Serum');
@@ -92,11 +152,24 @@ export default function InventoryManagement({ items, onAddItem, onDeleteItem }: 
       <div className="grid lg:grid-cols-3 gap-6">
         
         {/* Left Drawer Column: Register Item form */}
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/60 dark:border-slate-800/80 shadow-xs space-y-4 h-fit">
-          <h3 className="font-semibold text-sm text-slate-900 dark:text-white flex items-center gap-2 pb-2 border-b border-slate-50 dark:border-slate-800">
-            <Plus className="w-4 h-4 text-teal-600" />
-            Add Formulary Item
-          </h3>
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/60 dark:border-slate-800/80 shadow-xs space-y-4 h-fit relative">
+          
+          <div className="flex items-center justify-between pb-2 border-b border-slate-50 dark:border-slate-800">
+            <h3 className="font-semibold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+              <Plus className="w-4 h-4 text-teal-600" />
+              Add Formulary Item
+            </h3>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isScanning}
+              type="button"
+              className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 rounded-lg hover:bg-teal-100 dark:hover:bg-teal-900/50 transition-colors disabled:opacity-50"
+            >
+              {isScanning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Camera className="w-3.5 h-3.5" />}
+              {isScanning ? 'Scanning...' : 'Scan Label'}
+            </button>
+            <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
+          </div>
 
           <form onSubmit={handleAddNewItem} className="space-y-4">
             {/* Name */}

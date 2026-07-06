@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   FileText, Package, RefreshCw, AlertTriangle,
@@ -15,58 +15,7 @@ import { AgentEpisode, EpisodeType } from '../types';
 
 // ─── Mock episode data ────────────────────────────────────────────────────────
 
-const EPISODES: AgentEpisode[] = [
-  {
-    id: 'ep10', episodeType: 'agent_decision', title: 'Agent simplified PM routine',
-    summary: 'Removed 2 optional steps from evening routine (Steps 5 & 6). Routine reduced from 6 → 4 steps. Adherence was 43% — now projected to improve above 70%.',
-    occurredAt: '2026-06-21T08:14:00Z', agentId: 'adaptive-monitoring-agent', isVisibleToUser: true,
-  },
-  {
-    id: 'ep9', episodeType: 'agent_alert', title: 'Retinol introduction window alert scheduled',
-    summary: 'Detected 28+ days of consistent AM routine. Scheduled proactive alert: "You are now ready to introduce retinol at 0.025% per your dermatologist\'s plan."',
-    occurredAt: '2026-06-21T06:00:00Z', agentId: 'proactive-alert-agent', isVisibleToUser: true,
-  },
-  {
-    id: 'ep8', episodeType: 'report_analyzed', title: 'Dr. Okafor follow-up report analyzed',
-    summary: 'Extracted: acne vulgaris Grade II (stable), hyperpigmentation (improving). Recommended: increase niacinamide concentration. No new contraindications.',
-    occurredAt: '2026-06-18T11:22:00Z', relatedEntityType: 'report', agentId: 'report-ingestion-agent', isVisibleToUser: true,
-  },
-  {
-    id: 'ep7', episodeType: 'product_added', title: 'Neutrogena Rapid Wrinkle Repair Retinol added to shelf',
-    summary: 'Scanned barcode. Extracted key ingredients: Retinol 0.025%, Hyaluronic Acid. Compatibility with current routine: 74/100. 1 potential conflict detected (Vitamin C AM).',
-    occurredAt: '2026-06-15T19:45:00Z', relatedEntityType: 'product', isVisibleToUser: true,
-  },
-  {
-    id: 'ep6', episodeType: 'reaction_logged', title: 'Redness reaction logged — mild severity',
-    summary: 'User logged mild redness after PM routine. Agent identified Neutrogena Retinol as most likely cause based on introduction timeline. Flagged for monitoring.',
-    occurredAt: '2026-06-12T21:30:00Z', isVisibleToUser: true,
-  },
-  {
-    id: 'ep5', episodeType: 'preference_updated', title: 'Preference learning: fragrance sensitivity confirmed',
-    summary: 'Agent identified pattern: 3 logged reactions all involved fragranced products. Updated preference memory: fragrance_sensitive = true. Future recommendations will exclude fragrance.',
-    occurredAt: '2026-06-12T21:31:00Z', agentId: 'preference-learning-agent', isVisibleToUser: true,
-  },
-  {
-    id: 'ep4', episodeType: 'routine_updated', title: 'Morning routine updated — SPF moved to final step',
-    summary: 'Agent auto-applied low-risk change: reordered SPF to final step for optimal UV protection. No approval needed. Routine score unchanged.',
-    occurredAt: '2026-06-10T06:00:00Z', relatedEntityType: 'routine', agentId: 'adaptive-monitoring-agent', isVisibleToUser: true,
-  },
-  {
-    id: 'ep3', episodeType: 'product_added', title: 'CeraVe SA Cleanser added to shelf',
-    summary: 'Manually added. Key ingredients: Salicylic Acid, Niacinamide, Ceramides. Compatibility: 92/100. Agent badge: ✅ Keep — directly addresses Grade II acne condition.',
-    occurredAt: '2026-05-30T10:12:00Z', relatedEntityType: 'product', isVisibleToUser: true,
-  },
-  {
-    id: 'ep2', episodeType: 'routine_created', title: 'Initial AM/PM routine generated',
-    summary: 'First routine created from dermatologist report + 4 available products. Routine score: 74/100. Morning: 4 steps. Evening: 6 steps. 1 gap identified: Azelaic Acid.',
-    occurredAt: '2026-05-28T14:00:00Z', relatedEntityType: 'routine', agentId: 'routine-generation-agent', isVisibleToUser: true,
-  },
-  {
-    id: 'ep1', episodeType: 'report_analyzed', title: 'Initial dermatologist report analyzed',
-    summary: 'Dr. Okafor — First consultation. Extracted: acne vulgaris Grade II, hyperpigmentation. Recommended: Salicylic Acid, Niacinamide, Vitamin C. Contraindicated: heavy mineral oils.',
-    occurredAt: '2026-05-28T13:45:00Z', relatedEntityType: 'report', agentId: 'report-ingestion-agent', isVisibleToUser: true,
-  },
-];
+// No mock data - fetching from API
 
 // ─── Filter config ─────────────────────────────────────────────────────────
 
@@ -212,10 +161,22 @@ function EpisodeCard({ episode, index }: { episode: AgentEpisode; index: number 
 
 export default function MemoryTimeline() {
   const [activeFilter, setActiveFilter] = useState<FilterKey>('all');
+  const [episodes, setEpisodes] = useState<AgentEpisode[]>([]);
+
+  useEffect(() => {
+    fetch('/api/memory')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.episodes) {
+          setEpisodes(data.episodes);
+        }
+      })
+      .catch(err => console.error(err));
+  }, []);
 
   const filtered = activeFilter === 'all'
-    ? EPISODES
-    : EPISODES.filter(ep => FILTERS.find(f => f.key === activeFilter)!.types.includes(ep.episodeType));
+    ? episodes
+    : episodes.filter(ep => FILTERS.find(f => f.key === activeFilter)!.types.includes(ep.episodeType));
 
   const grouped = groupByMonth(filtered);
 
@@ -234,7 +195,7 @@ export default function MemoryTimeline() {
           Memory Timeline
         </h2>
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          Everything your agent remembers · {EPISODES.length} events
+          Everything your agent remembers · {episodes.length} events
         </p>
       </div>
 

@@ -111,60 +111,71 @@ export default function ReportAnalysis({ onAddAnalysis }: ReportAnalysisProps) {
       "Generating diagnostic clinical RoutineIQ profile..."
     ];
 
-    for (let i = 0; i < steps.length; i++) {
-      await new Promise((resolve) => setTimeout(resolve, 700));
-      setAnalysisSteps((prev) => [...prev, steps[i]]);
+    // Start UI animation steps without blocking the fetch
+    const stepsPromise = (async () => {
+      for (let i = 0; i < steps.length; i++) {
+        await new Promise((resolve) => setTimeout(resolve, 700));
+        setAnalysisSteps((prev) => [...prev, steps[i]]);
+      }
+    })();
+
+    try {
+      const res = await fetch('/api/analyze-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reportText: inputText })
+      });
+      
+      if (!res.ok) throw new Error('Analysis failed');
+      
+      const data = await res.json();
+      
+      // Wait for UI steps to finish at least partially so it looks good
+      await stepsPromise;
+      
+      setOutcome({
+        diagnosis: data.diagnosis || 'Unknown Diagnosis',
+        substances: data.substances || [],
+        conflicts: data.conflicts || [],
+        severity: data.severity || 'Medium',
+      });
+      
+      if (data.diagnosis) {
+        onAddAnalysis({
+          id: `#RD-${Math.floor(4000 + Math.random() * 1000)}-S`,
+          type: data.diagnosis,
+          clinician: "Dr. Aris (AI Analyst)",
+          status: "COMPLETE",
+          severity: data.severity || 'Medium',
+          date: "Today"
+        });
+
+        // Log to memory timeline
+        try {
+          await fetch('/api/memory', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'add_episode',
+              payload: {
+                episodeType: 'report_analyzed',
+                title: 'Clinical Report Extracted',
+                summary: `Extracted: ${data.diagnosis}. Substances identified: ${(data.substances || []).join(', ')}.`,
+                relatedEntityType: 'report',
+                agentId: 'report-ingestion-agent',
+                isVisibleToUser: true,
+              }
+            })
+          });
+        } catch (err) {
+          console.error('Failed to log report to memory:', err);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsAnalyzing(false);
     }
-
-    // Determine basic diagnostic features dynamically from text
-    let diagnosis = "General Dermal Deficiency";
-    let substances = ["Niacinamide", "HA Agent"];
-    let conflicts: string[] = [];
-    let severity: 'High' | 'Medium' | 'Low' = 'Low';
-
-    const lowerText = inputText.toLowerCase();
-
-    if (lowerText.includes("atopic") || lowerText.includes("barrier")) {
-      diagnosis = "Atopic Epidermal Barrier Degradation";
-      substances = ["Ceramides (NP, AP, EOP) 2.5%", "Hyaluronic Acid 2%", "Azelaic Acid 15%"];
-      conflicts = ["Avoid L-Ascorbic Acid during active flare", "Avoid Benzoyl Peroxide"];
-      severity = "High";
-    } else if (lowerText.includes("laser") || lowerText.includes("solar")) {
-      diagnosis = "Post-Laser Erythema & Solar Hyperpigmentation";
-      substances = ["L-Ascorbic Acid 10%", "Centella Asiatica 4%"];
-      conflicts = ["Retinoids suspended for 14 days"];
-      severity = "Medium";
-    } else if (lowerText.includes("acne") || lowerText.includes("benzoyl")) {
-      diagnosis = "Acne Vulgaris Moderate Control";
-      substances = ["Benzoyl Peroxide 5%", "Retinol 1% Complex", "Pure Squalane Hydrator"];
-      conflicts = ["Concurrent use of Benzoyl Peroxide and Retinol in single application window"];
-      severity = "High";
-    } else {
-      // General parsed
-      diagnosis = "Custom Clinical Routine Extract";
-      substances = ["Hyaluronic Hydra 2%", "L-Ascorbic Acid"];
-      conflicts = ["Mix Retinoids with caution"];
-      severity = "Medium";
-    }
-
-    setOutcome({
-      diagnosis,
-      substances,
-      conflicts,
-      severity
-    });
-
-    setIsAnalyzing(false);
-
-    // Register into app state
-    onAddAnalysis({
-      id: `#RD-${Math.floor(4000 + Math.random() * 1000)}-S`,
-      type: diagnosis,
-      clinician: "Dr. Aris (AI Analyst)",
-      status: "COMPLETE",
-      severity: severity,
-      date: "Today"
-    });
   };
 
   return (

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Sparkles, Brain, Sun, Moon, CheckCircle2, Clock,
@@ -29,7 +29,7 @@ const AGENT_STATS = {
   nextCheck: '5 days',
 };
 
-const ROUTINE_SCORE: RoutineScore = {
+const DEFAULT_ROUTINE_SCORE: RoutineScore = {
   overall: 86,
   compatibility: 82,
   effectiveness: 90,
@@ -472,6 +472,45 @@ function QuickStats({ onNavigate }: { onNavigate: (s: ScreenType) => void }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function AgentDashboard({ onScreenChange }: AgentDashboardProps) {
+  const [decisions, setDecisions] = useState<AgentDecision[]>(PENDING_DECISIONS);
+  const [routineScore, setRoutineScore] = useState<RoutineScore>(DEFAULT_ROUTINE_SCORE);
+  const [isLoadingInsights, setIsLoadingInsights] = useState(false);
+
+  useEffect(() => {
+    async function fetchData() {
+      setIsLoadingInsights(true);
+      try {
+        const [insightsRes, progressRes] = await Promise.all([
+          fetch('/api/agent-insights', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ inventory: [], recentReports: [] })
+          }),
+          fetch('/api/patient-progress', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ inventory: [], usageHistory: [] })
+          })
+        ]);
+
+        if (insightsRes.ok) {
+          const data = await insightsRes.json();
+          if (data.insights) setDecisions(data.insights);
+        }
+
+        if (progressRes.ok) {
+          const data = await progressRes.json();
+          if (data.routineScore) setRoutineScore(data.routineScore);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsLoadingInsights(false);
+      }
+    }
+    fetchData();
+  }, []);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
@@ -486,10 +525,10 @@ export default function AgentDashboard({ onScreenChange }: AgentDashboardProps) 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
         <div className="lg:col-span-2 space-y-5">
           <RoutineCard onNavigate={onScreenChange} />
-          <InsightsFeed decisions={PENDING_DECISIONS} onNavigate={onScreenChange} />
+          <InsightsFeed decisions={decisions} onNavigate={onScreenChange} />
         </div>
         <div className="space-y-5">
-          <RoutineScoreCard score={ROUTINE_SCORE} onNavigate={onScreenChange} />
+          <RoutineScoreCard score={routineScore} onNavigate={onScreenChange} />
         </div>
       </div>
     </motion.div>
