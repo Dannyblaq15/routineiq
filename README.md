@@ -1,7 +1,3 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
-
 # RoutineIQ
 
 RoutineIQ is an AI-powered dermatology assistant that tracks routines and logs side effects.
@@ -19,11 +15,11 @@ RoutineIQ is an AI-powered dermatology assistant that tracks routines and logs s
 
 ```mermaid
 flowchart TD
-    A[User / Frontend (Next.js)] -->|HTTP request| B[Alibaba Cloud Function Compute <br> Backend API]
+    A["User / Frontend (Next.js)"] -->|"HTTP request"| B["Alibaba Cloud Function Compute <br> Backend API"]
     
-    subgraph VPC [Alibaba Cloud VPC ap-southeast-1]
-        B -->|SQL Queries| C[(ApsaraDB RDS Serverless <br> MySQL)]
-        B -->|API Calls| D[Qwen Cloud API <br> dashscope-intl.aliyuncs.com]
+    subgraph VPC ["Alibaba Cloud VPC ap-southeast-1"]
+        B -->|"SQL Queries"| C[("ApsaraDB RDS Serverless <br> MySQL")]
+        B -->|"API Calls"| D["Qwen Cloud API <br> dashscope-intl.aliyuncs.com"]
     end
 ```
 
