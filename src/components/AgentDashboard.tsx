@@ -38,58 +38,9 @@ const DEFAULT_ROUTINE_SCORE: RoutineScore = {
   simplicity: 78,
 };
 
-const MORNING_STEPS: RoutineStep[] = [
-  {
-    id: 'ms1', stepNumber: 1, period: 'morning',
-    productName: 'SA Hydrating Cleanser', brand: 'CeraVe',
-    instructions: 'Apply to damp face, massage 30s, rinse',
-    whyIncluded: 'Delivers salicylic acid as the first step on bare skin — essential for Grade II acne per your June 18 report.',
-    keyIngredient: 'Salicylic Acid', waitAfterMins: 2, isOptional: false, isCompleted: true,
-  },
-  {
-    id: 'ms2', stepNumber: 2, period: 'morning',
-    productName: '10% Vitamin C Serum', brand: 'The Inkey List',
-    instructions: '3 drops, pat into skin, do not rub',
-    whyIncluded: 'Recommended for hyperpigmentation in your report. Applied AM to avoid retinol oxidation conflict.',
-    keyIngredient: 'L-Ascorbic Acid', waitAfterMins: 3, isOptional: false, isCompleted: true,
-  },
-  {
-    id: 'ms3', stepNumber: 3, period: 'morning',
-    productName: 'Moisturizing Lotion', brand: 'CeraVe',
-    instructions: 'Apply all over face, neck included',
-    whyIncluded: 'Ceramide barrier support — critical for skin recovering from BHA exfoliation.',
-    keyIngredient: 'Ceramides', waitAfterMins: 1, isOptional: false, isCompleted: false,
-  },
-  {
-    id: 'ms4', stepNumber: 4, period: 'morning',
-    productName: 'SPF 50+ Sunscreen', brand: 'La Roche-Posay',
-    instructions: 'Final step — 2 finger lengths, reapply every 2 hours',
-    whyIncluded: 'Non-negotiable with Vitamin C and any active ingredients. Also protects against hyperpigmentation worsening.',
-    keyIngredient: 'UV Filters', waitAfterMins: 0, isOptional: false, isCompleted: false,
-  },
-];
 
-const PENDING_DECISIONS: AgentDecision[] = [
-  {
-    id: 'ad1',
-    decisionType: 'simplify_routine',
-    status: 'pending',
-    title: 'Simplify your PM routine from 6 → 3 steps',
-    reasoning: 'You completed your PM routine 3 of 7 nights this week. The 6-step length appears to be the barrier. Removing the 2 optional steps preserves clinical effectiveness while improving your adherence.',
-    confidence: 0.91,
-    createdAt: new Date(Date.now() - 86400000).toISOString(),
-    expiresAt: new Date(Date.now() + 5 * 86400000).toISOString(),
-  },
-  {
-    id: 'ad2',
-    decisionType: 'agent_alert',
-    status: 'pending',
-    title: 'Retinol introduction window opens in 3 days',
-    reasoning: 'You have maintained a consistent AM routine for 28 days. Your skin is ready for retinol introduction at 0.025% — as recommended by Dr. Okafor.',
-    confidence: 0.87,
-    createdAt: new Date(Date.now() - 2 * 86400000).toISOString(),
-  },
-];
+
+
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
@@ -159,15 +110,11 @@ function AgentStatusCard({ onNavigate }: { onNavigate: (s: ScreenType) => void }
   );
 }
 
-function RoutineCard({ onNavigate }: { onNavigate: (s: ScreenType) => void }) {
+function RoutineCard({ steps, onToggleStep, onGenerateRoutine, isGenerating }: { steps: RoutineStep[]; onToggleStep: (id: string, isCompleted: boolean) => void; onGenerateRoutine: () => void; isGenerating: boolean; }) {
   const [activePeriod, setActivePeriod] = useState<'morning' | 'evening'>('morning');
-  const [steps, setSteps] = useState<RoutineStep[]>(MORNING_STEPS);
 
-  const completedCount = steps.filter(s => s.isCompleted).length;
-
-  const toggleStep = (id: string) => {
-    setSteps(prev => prev.map(s => s.id === id ? { ...s, isCompleted: !s.isCompleted } : s));
-  };
+  const periodSteps = steps.filter(s => s.period === activePeriod);
+  const completedCount = periodSteps.filter(s => s.isCompleted).length;
 
   return (
     <motion.div
@@ -180,13 +127,16 @@ function RoutineCard({ onNavigate }: { onNavigate: (s: ScreenType) => void }) {
       <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-slate-100 dark:border-slate-800">
         <div>
           <h3 className="font-display font-black text-base text-slate-900 dark:text-white">Active Routine</h3>
-          <p className="text-[11px] text-slate-400 mt-0.5">AI-generated · {completedCount}/{steps.length} steps done today</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">
+            {periodSteps.length > 0 ? `AI-generated · ${completedCount}/${periodSteps.length} steps done for ${activePeriod}` : 'No routine set'}
+          </p>
         </div>
         <button
-          onClick={() => onNavigate('routine-view')}
-          className="text-xs font-bold text-teal-700 dark:text-teal-400 flex items-center gap-1 hover:underline"
+          onClick={onGenerateRoutine}
+          disabled={isGenerating}
+          className="text-xs font-bold text-teal-700 dark:text-teal-400 flex items-center gap-1 hover:underline disabled:opacity-50"
         >
-          Full view <ChevronRight className="w-3.5 h-3.5" />
+          {isGenerating ? 'Optimizing...' : 'Optimize Routine'} <Sparkles className="w-3.5 h-3.5" />
         </button>
       </div>
 
@@ -211,7 +161,9 @@ function RoutineCard({ onNavigate }: { onNavigate: (s: ScreenType) => void }) {
       {/* Steps */}
       <div className="px-5 py-4 space-y-2">
         <AnimatePresence>
-          {steps.map((step, idx) => (
+          {periodSteps.length === 0 ? (
+            <p className="text-sm text-slate-400 py-4 text-center">Click Optimize Routine to generate steps from your inventory.</p>
+          ) : periodSteps.map((step, idx) => (
             <motion.div
               key={step.id}
               initial={{ opacity: 0, x: -8 }}
@@ -224,7 +176,7 @@ function RoutineCard({ onNavigate }: { onNavigate: (s: ScreenType) => void }) {
               }`}
             >
               <button
-                onClick={() => toggleStep(step.id)}
+                onClick={() => onToggleStep(step.id, !step.isCompleted)}
                 className="shrink-0"
                 aria-label={step.isCompleted ? 'Mark step as incomplete' : 'Mark step as complete'}
               >
@@ -253,12 +205,12 @@ function RoutineCard({ onNavigate }: { onNavigate: (s: ScreenType) => void }) {
       {/* Progress bar */}
       <div className="px-5 pb-5">
         <div className="flex items-center justify-between text-[11px] text-slate-500 mb-1.5">
-          <span>Today's adherence</span>
-          <span className="font-bold text-teal-700 dark:text-teal-400">{Math.round((completedCount / steps.length) * 100)}%</span>
+          <span>{activePeriod.charAt(0).toUpperCase() + activePeriod.slice(1)} adherence</span>
+          <span className="font-bold text-teal-700 dark:text-teal-400">{periodSteps.length > 0 ? Math.round((completedCount / periodSteps.length) * 100) : 0}%</span>
         </div>
         <div className="h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
           <motion.div
-            animate={{ width: `${(completedCount / steps.length) * 100}%` }}
+            animate={{ width: `${periodSteps.length > 0 ? (completedCount / periodSteps.length) * 100 : 0}%` }}
             transition={{ duration: 0.4 }}
             className="h-full bg-teal-500 rounded-full"
           />
@@ -322,124 +274,18 @@ function RoutineScoreCard({ score, onNavigate }: { score: RoutineScore; onNaviga
         ))}
       </div>
 
-      <button
-        onClick={() => onNavigate('routine-view')}
-        className="mt-5 w-full text-center py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
-      >
-        View full routine breakdown
-      </button>
+
     </motion.div>
   );
 }
 
-function InsightsFeed({ decisions, onNavigate }: { decisions: AgentDecision[]; onNavigate: (s: ScreenType) => void }) {
-  const [dismissed, setDismissed] = useState<string[]>([]);
-  const [approved, setApproved] = useState<string[]>([]);
 
-  const visible = decisions.filter(d => !dismissed.includes(d.id));
-
-  const getInsightIcon = (type: string) => {
-    if (type === 'simplify_routine') return <Zap className="w-4 h-4 text-amber-500" />;
-    if (type === 'agent_alert') return <Bell className="w-4 h-4 text-teal-500" />;
-    return <Brain className="w-4 h-4 text-purple-500" />;
-  };
-
-  const getInsightBg = (type: string) => {
-    if (type === 'simplify_routine') return 'border-amber-200/60 dark:border-amber-800/30 bg-amber-50/50 dark:bg-amber-950/10';
-    if (type === 'agent_alert') return 'border-teal-200/60 dark:border-teal-800/30 bg-teal-50/50 dark:bg-teal-950/10';
-    return 'border-purple-200/60 dark:border-purple-800/30 bg-purple-50/50 dark:bg-purple-950/10';
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: 0.2 }}
-      className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/60 dark:border-slate-800/80 shadow-xs overflow-hidden"
-    >
-      <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-slate-100 dark:border-slate-800">
-        <div>
-          <h3 className="font-display font-black text-base text-slate-900 dark:text-white flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-teal-500" />
-            Agent Insights
-          </h3>
-          <p className="text-[11px] text-slate-400 mt-0.5">Autonomous decisions this week</p>
-        </div>
-        <button
-          onClick={() => onNavigate('agent-insights')}
-          className="text-xs font-bold text-teal-700 dark:text-teal-400 hover:underline flex items-center gap-1"
-        >
-          See all <ChevronRight className="w-3.5 h-3.5" />
-        </button>
-      </div>
-
-      <div className="p-4 space-y-3">
-        <AnimatePresence>
-          {visible.length === 0 && (
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-sm text-slate-400 text-center py-4"
-            >
-              No pending insights — your agent is happy with your routine ✓
-            </motion.p>
-          )}
-
-          {visible.map((decision) => (
-            <motion.div
-              key={decision.id}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-              transition={{ duration: 0.3 }}
-              className={`p-4 rounded-xl border space-y-3 ${getInsightBg(decision.decisionType)}`}
-            >
-              <div className="flex items-start gap-2">
-                {getInsightIcon(decision.decisionType)}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{decision.title}</p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">{decision.reasoning}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] text-slate-400 font-medium">
-                  Confidence: {Math.round(decision.confidence * 100)}%
-                </span>
-                {approved.includes(decision.id) ? (
-                  <span className="text-[11px] text-teal-600 dark:text-teal-400 font-bold flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Approved
-                  </span>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setApproved(p => [...p, decision.id])}
-                      className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 bg-teal-600 hover:bg-teal-700 text-white rounded-lg transition"
-                    >
-                      <ThumbsUp className="w-3 h-3" /> Approve
-                    </button>
-                    <button
-                      onClick={() => setDismissed(p => [...p, decision.id])}
-                      className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition"
-                    >
-                      <ThumbsDown className="w-3 h-3" /> Dismiss
-                    </button>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </div>
-    </motion.div>
-  );
-}
 
 function QuickStats({ onNavigate }: { onNavigate: (s: ScreenType) => void }) {
   const stats = [
-    { label: 'AM Adherence', value: '94%', delta: '+12%', positive: true, screen: 'progress' as ScreenType },
-    { label: 'PM Adherence', value: '72%', delta: '+28%', positive: true, screen: 'progress' as ScreenType },
-    { label: 'Routine Score', value: '86', delta: '+8', positive: true, screen: 'routine-view' as ScreenType },
+    { label: 'AM Adherence', value: '94%', delta: '+12%', positive: true, screen: 'memory-timeline' as ScreenType },
+    { label: 'PM Adherence', value: '72%', delta: '+28%', positive: true, screen: 'memory-timeline' as ScreenType },
+    { label: 'Routine Score', value: '86', delta: '+8', positive: true, screen: 'agent-dashboard' as ScreenType },
     { label: 'Pending Insights', value: '2', delta: '', positive: true, screen: 'agent-insights' as ScreenType },
   ];
 
@@ -472,44 +318,74 @@ function QuickStats({ onNavigate }: { onNavigate: (s: ScreenType) => void }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function AgentDashboard({ onScreenChange }: AgentDashboardProps) {
-  const [decisions, setDecisions] = useState<AgentDecision[]>(PENDING_DECISIONS);
   const [routineScore, setRoutineScore] = useState<RoutineScore>(DEFAULT_ROUTINE_SCORE);
-  const [isLoadingInsights, setIsLoadingInsights] = useState(false);
+  const [routineSteps, setRoutineSteps] = useState<RoutineStep[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const [progressRes, routineRes] = await Promise.all([
+        fetch('/api/patient-progress', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ inventory: [], usageHistory: [] })
+        }),
+        fetch('/api/routine')
+      ]);
+
+      if (progressRes.ok) {
+        const data = await progressRes.json();
+        if (data.routineScore) setRoutineScore(data.routineScore);
+      }
+
+      if (routineRes.ok) {
+        const data = await routineRes.json();
+        if (data.steps) setRoutineSteps(data.steps);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function fetchData() {
-      setIsLoadingInsights(true);
-      try {
-        const [insightsRes, progressRes] = await Promise.all([
-          fetch('/api/agent-insights', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ inventory: [], recentReports: [] })
-          }),
-          fetch('/api/patient-progress', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ inventory: [], usageHistory: [] })
-          })
-        ]);
-
-        if (insightsRes.ok) {
-          const data = await insightsRes.json();
-          if (data.insights) setDecisions(data.insights);
-        }
-
-        if (progressRes.ok) {
-          const data = await progressRes.json();
-          if (data.routineScore) setRoutineScore(data.routineScore);
-        }
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setIsLoadingInsights(false);
-      }
-    }
     fetchData();
   }, []);
+
+  const handleToggleStep = async (id: string, isCompleted: boolean) => {
+    // Optimistic update
+    setRoutineSteps(prev => prev.map(s => s.id === id ? { ...s, isCompleted } : s));
+    try {
+      await fetch('/api/routine', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, isCompleted })
+      });
+    } catch (e) {
+      console.error('Failed to toggle step:', e);
+      // Revert on error
+      setRoutineSteps(prev => prev.map(s => s.id === id ? { ...s, isCompleted: !isCompleted } : s));
+    }
+  };
+
+  const handleGenerateRoutine = async () => {
+    setIsGenerating(true);
+    try {
+      const res = await fetch('/api/generate-routine', { method: 'POST' });
+      if (res.ok) {
+        await fetchData(); // refresh steps
+      } else {
+        alert('Failed to generate routine. Check if you have inventory items.');
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   return (
     <motion.div
@@ -524,8 +400,12 @@ export default function AgentDashboard({ onScreenChange }: AgentDashboardProps) 
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
         <div className="lg:col-span-2 space-y-5">
-          <RoutineCard onNavigate={onScreenChange} />
-          <InsightsFeed decisions={decisions} onNavigate={onScreenChange} />
+          <RoutineCard 
+            steps={routineSteps} 
+            onToggleStep={handleToggleStep} 
+            onGenerateRoutine={handleGenerateRoutine}
+            isGenerating={isGenerating}
+          />
         </div>
         <div className="space-y-5">
           <RoutineScoreCard score={routineScore} onNavigate={onScreenChange} />

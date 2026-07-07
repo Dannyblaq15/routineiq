@@ -1,48 +1,55 @@
 import { createOpenAI } from '@ai-sdk/openai';
-import { generateObject } from 'ai';
-import { z } from 'zod';
+import { generateText } from 'ai';
 import { getMemory } from '../../../lib/memoryStore';
 
-const qwen = createOpenAI({
-  baseURL: process.env.QWEN_BASE_URL || 'https://ws-jacsvkmm61awec2s.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1',
-  apiKey: process.env.QWEN_API_KEY,
-});
 
 export async function POST(req: Request) {
   try {
-    const memory = getMemory();
+    const qwen = createOpenAI({
+      baseURL: process.env.QWEN_BASE_URL || 'https://ws-jacsvkmm61awec2s.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1',
+      apiKey: process.env.QWEN_API_KEY,
+    });
+
+    const memory = await getMemory();
 
     const memoryContext = `
 USER PREFERENCES:
 ${JSON.stringify(memory.preferences, null, 2)}
 
 CURRENT INVENTORY:
-${memory.inventory.map(i => `- ${i.name} (${i.phase})`).join('\n')}
+${memory.inventory.map((i: any) => `- ${i.name} (${i.phase})`).join('\n')}
 
 PAST EPISODES (HISTORY):
-${memory.episodes.slice(0, 10).map(e => `[${e.occurredAt}] ${e.title}: ${e.summary}`).join('\n')}
+${memory.episodes.slice(0, 10).map((e: any) => `[${e.occurredAt}] ${e.title}: ${e.summary}`).join('\n')}
     `;
 
-    const result = await generateObject({
+    const result = await generateText({
       model: qwen('qwen-plus'),
-      system: 'You are RoutineIQ Agent, an autonomous Category 1 Memory Agent. Based on the user\'s memory context (preferences, inventory, and history), generate 1-3 actionable insights or decisions. Be direct, authoritative, and helpful.',
+      system: `You are RoutineIQ Agent, an autonomous Category 1 Memory Agent. Based on the user's memory context (preferences, inventory, and history), generate 1-3 actionable insights or decisions. Be direct, authoritative, and helpful. 
+IMPORTANT: You MUST return ONLY valid JSON matching this exact structure:
+{
+  "insights": [
+    {
+      "decisionType": "simplify_routine, agent_alert, product_conflict, or routine_optimization",
+      "title": "A short, actionable title",
+      "reasoning": "A detailed explanation based on their specific inventory or reports",
+      "confidence": 0.95
+    }
+  ]
+}
+Do not include any conversational text, markdown formatting, or backticks. Return ONLY the JSON object.`,
       messages: [
         {
           role: 'user',
           content: `Memory Context:\n${memoryContext}\n\nAnalyze this data and generate personalized insights.`,
         },
-      ],
-      schema: z.object({
-        insights: z.array(z.object({
-          decisionType: z.enum(['simplify_routine', 'agent_alert', 'product_conflict', 'routine_optimization']),
-          title: z.string().describe('A short, actionable title for the insight.'),
-          reasoning: z.string().describe('A detailed explanation of why this insight is being recommended based on their specific inventory or reports.'),
-          confidence: z.number().min(0).max(1).describe('A confidence score between 0 and 1 representing how certain you are about this insight.')
-        }))
-      }),
+      ]
     });
 
-    return new Response(JSON.stringify(result.object), {
+    const cleanedText = result.text.replace(/```json/gi, '').replace(/```/g, '').trim();
+    const parsedData = JSON.parse(cleanedText);
+
+    return new Response(JSON.stringify(parsedData), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });

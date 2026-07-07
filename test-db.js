@@ -1,39 +1,28 @@
-import { PrismaClient } from '@prisma/client';
+import net from 'net';
 
-const prisma = new PrismaClient();
+const HOST = 'rm-gs58pknz5gxfljmc1go.rwlb.singapore.rds.aliyuncs.com';
+const PORT = 3306;
 
-async function main() {
-  console.log('Testing connection to ApsaraDB RDS...');
-  
-  // 1. Create a test record
-  const episode = await prisma.agentEpisode.create({
-    data: {
-      episodeType: 'system_test',
-      title: 'Database Connection Test',
-      summary: 'Testing connection to Alibaba Cloud RDS Serverless',
-      agentId: 'system'
-    }
-  });
-  console.log('✅ Successfully inserted record:', episode.id);
+console.log(`\nTesting connection to Database Server: ${HOST}:${PORT}...\n`);
 
-  // 2. Read it back
-  const fetched = await prisma.agentEpisode.findUnique({
-    where: { id: episode.id }
-  });
-  console.log('✅ Successfully read record:', fetched?.title);
+const client = new net.Socket();
+client.setTimeout(5000); // 5 second timeout
 
-  // 3. Clean up
-  await prisma.agentEpisode.delete({
-    where: { id: episode.id }
-  });
-  console.log('✅ Successfully deleted test record.');
-}
+client.connect(PORT, HOST, function() {
+    console.log('✅ SUCCESS! Your computer can reach the Alibaba Cloud RDS database.');
+    console.log('The IP Whitelist is correctly configured.\n');
+    client.destroy(); 
+});
 
-main()
-  .catch(e => {
-    console.error('❌ Error testing database:', e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+client.on('timeout', function() {
+    console.error('❌ TIMEOUT: Could not reach the database within 5 seconds.');
+    console.error('Reason: Your current IP address is likely NOT in the Alibaba Cloud RDS IP Whitelist.');
+    client.destroy();
+});
+
+client.on('error', function(err) {
+    console.error('❌ ERROR: Connection failed.');
+    console.error(`Reason: ${err.message}`);
+    console.error('Ensure you are not on a restrictive Wi-Fi network that blocks port 3306.');
+    client.destroy();
+});

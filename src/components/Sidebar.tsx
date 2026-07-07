@@ -37,7 +37,7 @@ const AGENT_NAV = [
   { id: 'agent-dashboard' as ScreenType, label: 'Dashboard',      icon: LayoutDashboard },
   { id: 'memory-timeline' as ScreenType, label: 'My History',     icon: BookOpen },
   { id: 'agent-insights'  as ScreenType, label: 'Agent Insights', icon: Lightbulb },
-  { id: 'progress'        as ScreenType, label: 'My Progress',    icon: TrendingUp },
+
   { id: 'chat'            as ScreenType, label: 'Ask My Agent',   icon: MessageSquare },
 ];
 

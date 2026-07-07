@@ -17,6 +17,7 @@ import AgentDashboard from '../components/AgentDashboard';
 import MemoryTimeline from '../components/MemoryTimeline';
 import AgentChat from '../components/AgentChat';
 import OnboardingTour, { useOnboardingTour } from '../components/OnboardingTour';
+import AgentInsightsScreen from '../components/AgentInsightsScreen';
 
 import { ScreenType, PatientAnalysis as PatientAnalysisType, InventoryItem } from '../types';
 import { recentAnalysesList, inventoryItemsList } from '../data';
@@ -27,14 +28,13 @@ const SCREEN_META: Partial<Record<ScreenType, { title: string; subtitle: string 
   'agent-dashboard': { title: 'Dashboard',       subtitle: '✦ Your agent is active' },
   'memory-timeline': { title: 'My History',       subtitle: 'Everything your agent remembers' },
   'agent-insights':  { title: 'Agent Insights',   subtitle: 'Autonomous decisions this week' },
-  'progress':        { title: 'My Progress',      subtitle: 'Adherence & skin improvement over time' },
   'chat':            { title: 'Ask My Agent',     subtitle: 'Ask anything — answered from your history' },
   'analysis':        { title: 'Upload Report',    subtitle: 'Add a dermatologist report to your memory' },
   'inventory':       { title: 'My Products',      subtitle: 'Everything on your skincare shelf' },
   'settings':        { title: 'Settings',         subtitle: 'Your preferences' },
 };
 
-const AGENT_SCREENS: ScreenType[] = ['agent-dashboard', 'memory-timeline', 'agent-insights', 'progress', 'chat'];
+const AGENT_SCREENS: ScreenType[] = ['agent-dashboard', 'memory-timeline', 'agent-insights', 'chat'];
 
 // ─── Coming-soon placeholder ──────────────────────────────────────────────────
 
@@ -178,8 +178,8 @@ export default function Page() {
                 <AgentChat onNavigate={setCurrentScreen} />
               )}
 
-              {(currentScreen === 'agent-insights' || currentScreen === 'progress') && (
-                <ComingSoon screen={currentScreen} onBack={() => setCurrentScreen('agent-dashboard')} />
+              {(currentScreen === 'agent-insights') && (
+                <AgentInsightsScreen onBack={() => setCurrentScreen('agent-dashboard')} />
               )}
             </div>
           </AnimatePresence>

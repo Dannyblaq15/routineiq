@@ -50,3 +50,17 @@ model InventoryItem {
   imageUrl      String
   statusType    String
 }
+
+model RoutineStep {
+  id             String   @id @default(cuid())
+  stepNumber     Int
+  period         String   
+  productName    String
+  brand          String
+  instructions   String   @db.Text
+  whyIncluded    String   @db.Text
+  keyIngredient  String
+  waitAfterMins  Int      @default(0)
+  isOptional     Boolean  @default(false)
+  isCompleted    Boolean  @default(false)
+}

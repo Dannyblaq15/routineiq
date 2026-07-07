@@ -2,7 +2,7 @@ import { getMemory, addEpisode } from '../../../lib/memoryStore';
 
 export async function GET(req: Request) {
   try {
-    const memory = getMemory();
+    const memory = await getMemory();
     return new Response(JSON.stringify(memory), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },

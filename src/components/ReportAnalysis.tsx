@@ -126,7 +126,11 @@ export default function ReportAnalysis({ onAddAnalysis }: ReportAnalysisProps) {
         body: JSON.stringify({ reportText: inputText })
       });
       
-      if (!res.ok) throw new Error('Analysis failed');
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("Backend Error Response:", errText);
+        throw new Error('Analysis failed: ' + errText);
+      }
       
       const data = await res.json();
       

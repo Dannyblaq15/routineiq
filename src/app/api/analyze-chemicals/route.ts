@@ -1,38 +1,44 @@
 import { createOpenAI } from '@ai-sdk/openai';
-import { generateObject } from 'ai';
-import { z } from 'zod';
-
-const qwen = createOpenAI({
-  baseURL: process.env.QWEN_BASE_URL || 'https://ws-jacsvkmm61awec2s.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1',
-  apiKey: process.env.QWEN_API_KEY,
-});
+import { generateText } from 'ai';
 
 export async function POST(req: Request) {
   try {
+    const qwen = createOpenAI({
+      baseURL: process.env.QWEN_BASE_URL || 'https://ws-jacsvkmm61awec2s.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1',
+      apiKey: process.env.QWEN_API_KEY,
+    });
+
     const { chemicals } = await req.json();
 
-    const result = await generateObject({
+    const result = await generateText({
       model: qwen('qwen-plus'),
-      system: 'You are RoutineIQ Agent, an expert cosmetic chemist and formulation scientist. Analyze the provided list of skincare chemicals/ingredients and determine their compatibility, safety status, and potential interactions.',
+      system: `You are RoutineIQ Agent, an expert cosmetic chemist and formulation scientist. Analyze the provided list of skincare chemicals/ingredients and determine their compatibility, safety status, and potential interactions. 
+IMPORTANT: You MUST return ONLY valid JSON matching this exact structure:
+{
+  "status": "Safe, Caution, or Danger",
+  "compatibilityScore": 85,
+  "interactions": [
+    {
+      "pair": "Chemical A + Chemical B",
+      "description": "Detailed description of interaction",
+      "type": "Negative, positive, or neutral"
+    }
+  ],
+  "recommendation": "Final recommendation string"
+}
+Do not include any conversational text, markdown formatting, or backticks. Return ONLY the JSON object.`,
       messages: [
         {
           role: 'user',
           content: `Analyze the following chemicals for compatibility: ${JSON.stringify(chemicals)}`,
         },
-      ],
-      schema: z.object({
-        status: z.enum(['Safe', 'Caution', 'Danger']).describe('The overall safety status of combining these chemicals.'),
-        compatibilityScore: z.number().min(0).max(100).describe('A score from 0-100 indicating how compatible these chemicals are together.'),
-        interactions: z.array(z.object({
-          pair: z.string().describe('The pair of chemicals interacting, e.g., "Retinol + Vitamin C"'),
-          description: z.string().describe('A detailed description of the interaction, potential side effects, or benefits.'),
-          type: z.enum(['negative', 'positive', 'neutral']).describe('The nature of the interaction.')
-        })),
-        recommendation: z.string().describe('A final recommendation for the user on how to use these chemicals safely.')
-      }),
+      ]
     });
 
-    return new Response(JSON.stringify(result.object), {
+    const cleanedText = result.text.replace(/```json/gi, '').replace(/```/g, '').trim();
+    const parsedData = JSON.parse(cleanedText);
+
+    return new Response(JSON.stringify(parsedData), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });

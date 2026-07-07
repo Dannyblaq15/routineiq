@@ -22,7 +22,9 @@ export async function POST(req: Request) {
         : m.content || '',
     }));
 
-    const memory = getMemory();
+    const memory = await getMemory();
+    const db = (await import('../../../lib/db')).default;
+    const routineSteps = await db.routineStep.findMany({ orderBy: [{ period: 'asc' }, { stepNumber: 'asc' }] });
     
     // Convert memory into a readable format for the system prompt
     const memoryContext = `
@@ -33,7 +35,10 @@ CURRENT INVENTORY:
 ${memory.inventory.map(i => `- ${i.name} (${i.phase})`).join('\n')}
 
 PAST EPISODES (HISTORY):
-${memory.episodes.slice(0, 10).map(e => `[${e.occurredAt}] ${e.title}: ${e.summary}`).join('\n')}
+${memory.episodes.slice(0, 10).map((e: any) => `[${e.occurredAt}] ${e.title}: ${e.summary}`).join('\n')}
+
+ACTIVE ROUTINE:
+${routineSteps.length > 0 ? routineSteps.map(s => `[${s.period.toUpperCase()} Step ${s.stepNumber}] ${s.brand} ${s.productName} (${s.keyIngredient}) - ${s.whyIncluded}`).join('\n') : 'No routine set yet.'}
     `;
 
     const result = streamText({

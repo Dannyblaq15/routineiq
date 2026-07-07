@@ -54,7 +54,11 @@ export default function InventoryManagement({ items, onAddItem, onDeleteItem }: 
         body: JSON.stringify({ image: base64Image })
       });
       
-      if (!res.ok) throw new Error('Scan failed');
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("Backend Error Response:", errText);
+        throw new Error('Scan failed: ' + errText);
+      }
       
       const data = await res.json();
       
