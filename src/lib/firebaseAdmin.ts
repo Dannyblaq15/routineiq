@@ -12,7 +12,10 @@ try {
     });
   }
 } catch (error) {
-  console.log('Firebase Admin init skipped during build (expected on Vercel frontend)');
+  // If the private key is invalid (which happens on Vercel), initialize a fallback app without credentials!
+  if (!getApps().length) {
+    initializeApp({ projectId: 'dummy-project-id' });
+  }
 }
 
 export const adminAuth = getAuth();
