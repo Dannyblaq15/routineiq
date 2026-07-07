@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { getMemory, addEpisode } from '../../../lib/memoryStore';
 import { verifyAuth } from '../../../lib/auth';
 

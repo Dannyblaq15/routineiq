@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { createOpenAI } from '@ai-sdk/openai';
 import { generateText } from 'ai';
 import { verifyAuth } from '../../../lib/auth';

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { createOpenAI } from '@ai-sdk/openai';
 import { streamText, tool } from 'ai';
 import { z } from 'zod';
