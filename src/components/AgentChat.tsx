@@ -7,10 +7,29 @@ import { ScreenType } from '../types';
 import { useEffect, useRef, useState } from 'react';
 
 export default function AgentChat({ onNavigate }: { onNavigate: (s: ScreenType) => void }) {
-  const { messages, sendMessage, status, error, stop } = useChat();
+  const { messages, setMessages, sendMessage, status, error, stop } = useChat();
   const [input, setInput] = useState('');
   
   const isLoading = status === 'submitted' || status === 'streaming';
+
+  // Load chat history on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('routineiq_chat_history');
+    if (saved && messages.length === 0) {
+      try {
+        setMessages(JSON.parse(saved));
+      } catch (e) {
+        console.error('Failed to parse chat history', e);
+      }
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Save chat history on update
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem('routineiq_chat_history', JSON.stringify(messages));
+    }
+  }, [messages]);
 
   const bottomRef = useRef<HTMLDivElement>(null);
 

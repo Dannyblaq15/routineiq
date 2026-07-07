@@ -17,10 +17,11 @@ model AgentEpisode {
   relatedEntityId   String?
   agentId           String?
   isVisibleToUser   Boolean  @default(true)
+  userId            String   @default("anonymous")
 }
 
 model AgentPreference {
-  id                 String   @id @default("1")
+  id                 String   @id @default(cuid())
   complexity         String   @default("moderate")
   amMaxSteps         Int      @default(3)
   pmMaxSteps         Int      @default(4)
@@ -28,6 +29,7 @@ model AgentPreference {
   budgetMonthlyAvg   Float    @default(50.0)
   brandAvoidance     Json?
   confidenceScore    Float    @default(0.8)
+  userId             String   @default("anonymous")
 }
 
 model PatientAnalysis {
@@ -37,6 +39,7 @@ model PatientAnalysis {
   status    String   @default("PENDING")
   severity  String?
   date      DateTime @default(now())
+  userId    String   @default("anonymous")
 }
 
 model InventoryItem {
@@ -49,6 +52,7 @@ model InventoryItem {
   statusText    String
   imageUrl      String
   statusType    String
+  userId        String   @default("anonymous")
 }
 
 model RoutineStep {
@@ -63,4 +67,5 @@ model RoutineStep {
   waitAfterMins  Int      @default(0)
   isOptional     Boolean  @default(false)
   isCompleted    Boolean  @default(false)
+  userId         String   @default("anonymous")
 }

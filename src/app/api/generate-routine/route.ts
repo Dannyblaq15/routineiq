@@ -8,9 +8,12 @@ const qwen = createOpenAI({
   apiKey: process.env.QWEN_API_KEY,
 });
 
+import { verifyAuth } from '../../../lib/auth';
+
 export async function POST(req: Request) {
   try {
-    const memory = await getMemory();
+    const userId = await verifyAuth(req);
+    const memory = await getMemory(userId);
     
     // Safety check: if no inventory, return empty routine
     if (!memory.inventory || memory.inventory.length === 0) {
@@ -69,7 +72,7 @@ No other text or markdown.`;
     }
 
     // Replace the current routine in the database
-    await db.routineStep.deleteMany({}); // clear existing
+    await (db as any).routineStep.deleteMany({ where: { userId } }); // clear existing
     
     // Sort into a list and inject step numbers
     let amCounter = 1;
@@ -87,14 +90,15 @@ No other text or markdown.`;
         keyIngredient: step.keyIngredient || '',
         waitAfterMins: step.waitAfterMins || 0,
         isOptional: step.isOptional || false,
-        isCompleted: false
+        isCompleted: false,
+        userId
       };
     });
 
-    await db.routineStep.createMany({ data: stepsToCreate });
+    await (db as any).routineStep.createMany({ data: stepsToCreate });
 
     // Log this action
-    await addEpisode({
+    await addEpisode(userId, {
       episodeType: 'routine_updated',
       title: 'Agent re-optimized your routine',
       summary: `Generated a new ${stepsToCreate.length}-step routine based on your updated inventory.`,

@@ -2,6 +2,7 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { streamText, tool } from 'ai';
 import { z } from 'zod';
 import { getMemory, updatePreferences } from '../../../lib/memoryStore';
+import db from '../../../lib/db';
 
 // Initialize Qwen using DashScope compatible endpoint for the specific workspace
 const qwen = createOpenAI({
@@ -9,8 +10,11 @@ const qwen = createOpenAI({
   apiKey: process.env.QWEN_API_KEY,
 });
 
+import { verifyAuth } from '../../../lib/auth';
+
 export async function POST(req: Request) {
   try {
+    const userId = await verifyAuth(req);
     const { messages } = await req.json();
     console.log('✅ API /api/chat hit with messages:', JSON.stringify(messages, null, 2));
 
@@ -22,9 +26,11 @@ export async function POST(req: Request) {
         : m.content || '',
     }));
 
-    const memory = await getMemory();
-    const db = (await import('../../../lib/db')).default;
-    const routineSteps = await db.routineStep.findMany({ orderBy: [{ period: 'asc' }, { stepNumber: 'asc' }] });
+    const memory = await getMemory(userId);
+    const routineSteps = await (db as any).routineStep.findMany({ 
+      where: { userId },
+      orderBy: [{ period: 'asc' }, { stepNumber: 'asc' }] 
+    });
     
     // Convert memory into a readable format for the system prompt
     const memoryContext = `
@@ -44,9 +50,36 @@ ${routineSteps.length > 0 ? routineSteps.map(s => `[${s.period.toUpperCase()} St
     const result = streamText({
       model: qwen('qwen-plus'),
       messages: coreMessages,
-      system: `You are RoutineIQ, an autonomous Category 1 Memory Agent helping a user manage their skincare routine. 
-You possess long-term memory. You must proactively recall past episodes and respect user preferences.
-If a user mentions a new preference (e.g. "I hate fragrance" or "My budget is $50"), use the update_preference tool to log it permanently.
+      system: `# RoutineIQ System Prompt
+
+You are RoutineIQ, a personal AI assistant that helps users build, track, and 
+stick to routines (habits, schedules, goals, self-care). You remember past 
+context and use it to personalize guidance over time.
+
+## Response Rules
+
+- Be concise. Default to 2-4 sentences unless the user's request genuinely 
+  needs more (e.g., a multi-step plan).
+- Answer directly first — no preamble, no restating the question.
+- Use bullets only for actual multi-step or multi-item content, not for 
+  padding a short answer.
+- Bold only the 1-2 most important details (a number, a time, an action).
+- Skip the "Bottom line" summary unless the response is long enough to need one.
+
+## Memory Usage
+
+- Reference relevant past routines, goals, or patterns naturally and briefly 
+  (e.g., "4/5 days this week" not a paragraph recapping history).
+- If context is missing, ask one short clarifying question instead of guessing.
+
+## Tone
+
+- Warm, encouraging, plain language. No jargon.
+- Treat missed days/streaks as normal, not failures — brief reassurance, not a 
+  speech.
+- Never diagnose (no "this sounds like ADHD/depression" etc.). Flag genuinely 
+  unhealthy patterns briefly, then move on.
+- Suggestions, not commands — it's their routine.
 
 ${memoryContext}`,
       tools: {
@@ -60,14 +93,56 @@ ${memoryContext}`,
           }),
           // @ts-ignore: TS inference error for tool execute
           execute: async (args: { fragranceSensitive?: boolean; budgetMonthlyAvg?: number; brandAvoidance?: string[]; complexity?: 'minimal' | 'moderate' | 'full' }) => {
-            updatePreferences(args);
+            await updatePreferences(userId, args);
             return `Preferences updated successfully to: ${JSON.stringify(args)}`;
+          }
+        }),
+        add_inventory_item: tool({
+          description: 'Add a new product to the user\'s skincare inventory.',
+          parameters: z.object({
+            name: z.string().describe('The name of the product'),
+            phase: z.string().describe('The routine phase (e.g., "Morning", "Evening", "Treatment")'),
+            category: z.string().describe('The product category (e.g., "Cleanser", "Serum", "Moisturizer")'),
+            statusText: z.string().describe('A short status phrase (e.g., "Good match", "Contains active")'),
+            statusType: z.enum(['error', 'warning', 'normal', 'success']).describe('Status color type'),
+            tags: z.array(z.string()).optional().describe('Optional tags for ingredients or features')
+          }),
+          // @ts-ignore
+          execute: async (args: { name: string; phase: string; category: string; statusText: string; statusType: string; tags?: string[] }) => {
+            const newItem = await (db as any).inventoryItem.create({
+              data: {
+                name: args.name,
+                phase: args.phase,
+                category: args.category,
+                statusText: args.statusText,
+                statusType: args.statusType,
+                tags: args.tags || [],
+                compatibility: 100,
+                imageUrl: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=80&w=200&auto=format&fit=crop',
+                userId
+              }
+            });
+            return `Successfully added ${args.name} to the inventory.`;
           }
         })
       },
       onError: ({ error }) => {
         console.error('🔥 Async Stream Error:', error);
         require('fs').writeFileSync('debug-error-async.log', JSON.stringify(error, Object.getOwnPropertyNames(error as any), 2));
+      },
+      onFinish: async ({ text }) => {
+        // Log the interaction to the database memory timeline
+        const lastUserMessage = coreMessages.filter((m: any) => m.role === 'user').pop();
+        if (lastUserMessage) {
+          const { addEpisode } = await import('../../../lib/memoryStore');
+          await addEpisode(userId, {
+            episodeType: 'agent_learning',
+            title: 'Chat Interaction',
+            summary: `User asked: "${lastUserMessage.content.slice(0, 100)}${lastUserMessage.content.length > 100 ? '...' : ''}"`,
+            isVisibleToUser: true,
+            agentId: 'chat-agent'
+          });
+        }
       }
     });
 

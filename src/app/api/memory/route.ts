@@ -1,8 +1,10 @@
 import { getMemory, addEpisode } from '../../../lib/memoryStore';
+import { verifyAuth } from '../../../lib/auth';
 
 export async function GET(req: Request) {
   try {
-    const memory = await getMemory();
+    const userId = await verifyAuth(req);
+    const memory = await getMemory(userId);
     return new Response(JSON.stringify(memory), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
@@ -14,11 +16,12 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    const userId = await verifyAuth(req);
     const body = await req.json();
     const { action, payload } = body;
 
     if (action === 'add_episode') {
-      const newEp = addEpisode(payload);
+      const newEp = await addEpisode(userId, payload);
       return new Response(JSON.stringify(newEp), { status: 200 });
     }
 

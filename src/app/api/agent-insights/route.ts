@@ -1,16 +1,17 @@
 import { createOpenAI } from '@ai-sdk/openai';
 import { generateText } from 'ai';
 import { getMemory } from '../../../lib/memoryStore';
-
+import { verifyAuth } from '../../../lib/auth';
 
 export async function POST(req: Request) {
   try {
+    const userId = await verifyAuth(req);
     const qwen = createOpenAI({
       baseURL: process.env.QWEN_BASE_URL || 'https://ws-jacsvkmm61awec2s.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1',
       apiKey: process.env.QWEN_API_KEY,
     });
 
-    const memory = await getMemory();
+    const memory = await getMemory(userId);
 
     const memoryContext = `
 USER PREFERENCES:

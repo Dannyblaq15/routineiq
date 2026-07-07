@@ -1,8 +1,11 @@
 import db from '../../../lib/db';
+import { verifyAuth } from '../../../lib/auth';
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const steps = await db.routineStep.findMany({
+    const userId = await verifyAuth(req);
+    const steps = await (db as any).routineStep.findMany({
+      where: { userId },
       orderBy: [
         { period: 'asc' },
         { stepNumber: 'asc' }
@@ -17,14 +20,15 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    const userId = await verifyAuth(req);
     const { id, isCompleted } = await req.json();
     
     if (!id) {
       return new Response(JSON.stringify({ error: 'Step ID is required' }), { status: 400 });
     }
 
-    const updatedStep = await db.routineStep.update({
-      where: { id },
+    const updatedStep = await (db as any).routineStep.updateMany({
+      where: { id, userId },
       data: { isCompleted }
     });
 

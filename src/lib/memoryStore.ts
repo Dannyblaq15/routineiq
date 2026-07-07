@@ -8,19 +8,21 @@ export interface MemoryDB {
   reports: PatientAnalysis[];
 }
 
-export async function getMemory(): Promise<MemoryDB> {
+export async function getMemory(userId: string): Promise<MemoryDB> {
   try {
-    const episodes = await db.agentEpisode.findMany({
+    const episodes = await (db as any).agentEpisode.findMany({
+      where: { userId },
       orderBy: { occurredAt: 'desc' },
     });
     
-    let preferences = await db.agentPreference.findUnique({ where: { id: "1" } });
+    let preferences = await (db as any).agentPreference.findFirst({ where: { userId } });
     if (!preferences) {
-      preferences = await db.agentPreference.create({ data: { id: "1" } });
+      preferences = await (db as any).agentPreference.create({ data: { userId } });
     }
 
-    const inventory = await db.inventoryItem.findMany();
-    const reports = await db.patientAnalysis.findMany({
+    const inventory = await (db as any).inventoryItem.findMany({ where: { userId } });
+    const reports = await (db as any).patientAnalysis.findMany({
+      where: { userId },
       orderBy: { date: 'desc' },
     });
 
@@ -44,9 +46,9 @@ export async function getMemory(): Promise<MemoryDB> {
   }
 }
 
-export async function addEpisode(episode: Omit<AgentEpisode, 'id' | 'occurredAt'>) {
+export async function addEpisode(userId: string, episode: Omit<AgentEpisode, 'id' | 'occurredAt'>) {
   try {
-    const newEpisode = await db.agentEpisode.create({
+    const newEpisode = await (db as any).agentEpisode.create({
       data: {
         episodeType: episode.episodeType,
         title: episode.title,
@@ -55,6 +57,7 @@ export async function addEpisode(episode: Omit<AgentEpisode, 'id' | 'occurredAt'
         relatedEntityId: episode.relatedEntityId,
         agentId: episode.agentId,
         isVisibleToUser: episode.isVisibleToUser,
+        userId,
       },
     });
     return newEpisode;
@@ -63,23 +66,26 @@ export async function addEpisode(episode: Omit<AgentEpisode, 'id' | 'occurredAt'
   }
 }
 
-export async function updatePreferences(prefs: Partial<AgentPreferences>) {
+export async function updatePreferences(userId: string, prefs: Partial<AgentPreferences>) {
   try {
-    await db.agentPreference.upsert({
-      where: { id: "1" },
+    const existing = await (db as any).agentPreference.findFirst({ where: { userId } });
+    const idToUpdate = existing?.id || 'new_id_will_be_generated';
+
+    await (db as any).agentPreference.upsert({
+      where: { id: idToUpdate },
       update: {
         ...prefs,
         brandAvoidance: prefs.brandAvoidance ? JSON.stringify(prefs.brandAvoidance) : undefined,
       },
       create: {
-        id: "1",
+        userId,
         ...prefs,
         brandAvoidance: prefs.brandAvoidance ? JSON.stringify(prefs.brandAvoidance) : undefined,
       },
     });
     
     // Automatically add an episode for this update
-    await addEpisode({
+    await addEpisode(userId, {
       episodeType: 'preference_updated',
       title: 'Agent learned a new preference',
       summary: `Updated preferences`,

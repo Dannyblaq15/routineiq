@@ -18,6 +18,10 @@ import MemoryTimeline from '../components/MemoryTimeline';
 import AgentChat from '../components/AgentChat';
 import OnboardingTour, { useOnboardingTour } from '../components/OnboardingTour';
 import AgentInsightsScreen from '../components/AgentInsightsScreen';
+import LoginScreen from '../components/LoginScreen';
+
+import { auth } from '../lib/firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
 
 import { ScreenType, PatientAnalysis as PatientAnalysisType, InventoryItem } from '../types';
 import { recentAnalysesList, inventoryItemsList } from '../data';
@@ -68,9 +72,44 @@ function ComingSoon({ screen, onBack }: { screen: ScreenType; onBack: () => void
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function Page() {
+  const [user, setUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [currentScreen, setCurrentScreen] = useState<ScreenType>('agent-dashboard');
   const [analyses, setAnalyses] = useState<PatientAnalysisType[]>(recentAnalysesList);
   const [inventory, setInventory] = useState<InventoryItem[]>(inventoryItemsList);
+
+  useEffect(() => {
+    // Setup global fetch interceptor to inject Firebase auth token
+    const originalFetch = window.fetch;
+    window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input instanceof Request ? input.url : input.toString();
+      if (url.startsWith('/api/')) {
+        try {
+          const token = await auth.currentUser?.getIdToken();
+          if (token) {
+            init = init || {};
+            init.headers = {
+              ...init.headers,
+              Authorization: `Bearer ${token}`
+            };
+          }
+        } catch (e) {
+          console.error('Failed to get Firebase token', e);
+        }
+      }
+      return originalFetch(input, init);
+    };
+
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setAuthLoading(false);
+    });
+
+    return () => {
+      unsubscribe();
+      window.fetch = originalFetch; // Cleanup interceptor
+    };
+  }, []);
 
   // Dark mode
   const [darkMode, setDarkMode] = useState<boolean>(false);
@@ -102,6 +141,14 @@ export default function Page() {
 
   const meta = SCREEN_META[currentScreen];
   const isAgentScreen = AGENT_SCREENS.includes(currentScreen);
+
+  if (authLoading) {
+    return <div className="min-h-screen bg-[#fafafa] dark:bg-[#090d16] flex items-center justify-center text-teal-600">Loading RoutineIQ...</div>;
+  }
+
+  if (!user) {
+    return <LoginScreen />;
+  }
 
   return (
     <>
