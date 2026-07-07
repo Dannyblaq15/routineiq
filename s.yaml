@@ -19,6 +19,12 @@ resources:
         port: 9000
       memorySize: 1024
       timeout: 60
+      environmentVariables:
+        DATABASE_URL: ${env(DATABASE_URL)}
+        FIREBASE_PRIVATE_KEY: ${env(FIREBASE_PRIVATE_KEY)}
+        FIREBASE_CLIENT_EMAIL: ${env(FIREBASE_CLIENT_EMAIL)}
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${env(NEXT_PUBLIC_FIREBASE_PROJECT_ID)}
+        QWEN_API_KEY: ${env(QWEN_API_KEY)}
       # Required for Next.js HTTP server
       triggers:
         - triggerName: http-trigger
