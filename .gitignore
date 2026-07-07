@@ -1,4 +1,4 @@
-node_modules/
+
 build/
 dist/
 coverage/
@@ -9,6 +9,7 @@ coverage/
 
 # Next.js
 .next/
+node_modules/
 out/
 
 # TypeScript

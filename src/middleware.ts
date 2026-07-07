@@ -13,7 +13,7 @@ export function middleware(request: NextRequest) {
   // Only apply rate limiting to /api/* routes
   if (request.nextUrl.pathname.startsWith('/api/')) {
     // Get IP address, fallback to a default if not found
-    const ip = request.ip ?? request.headers.get('x-forwarded-for') ?? 'unknown-ip';
+    const ip = request.headers.get('x-real-ip') ?? request.headers.get('x-forwarded-for') ?? 'unknown-ip';
     const now = Date.now();
 
     const requestData = rateLimitMap.get(ip);
