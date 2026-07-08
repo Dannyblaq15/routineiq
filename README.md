@@ -9,7 +9,9 @@ RoutineIQ is an AI-powered dermatology assistant that tracks routines and logs s
 - **AI Model:** Qwen Cloud API (Qwen-Max) via dashscope-intl.aliyuncs.com
 - **Networking:** Private VPC connecting Function Compute to RDS
 - **Live endpoint:** https://routineiq-itblaotrkx.ap-southeast-1.fcapp.run
-- **Proof of Alibaba Cloud usage:** [See src/lib/db.ts](./src/lib/db.ts)
+- **Proof of Alibaba Cloud usage (Code):** [See src/lib/db.ts](./src/lib/db.ts)
+- **Proof of Alibaba Cloud usage (Deployment):**  
+  ![Alibaba Cloud Deployment Proof](./alibaba-cloud-proof.png)
 
 ## Architecture
 
