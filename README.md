@@ -11,7 +11,8 @@ RoutineIQ is an AI-powered dermatology assistant that tracks routines and logs s
 - **Live endpoint:** https://routineiq-itblaotrkx.ap-southeast-1.fcapp.run
 - **Proof of Alibaba Cloud usage (Code):** [See src/lib/db.ts](./src/lib/db.ts)
 - **Proof of Alibaba Cloud usage (Deployment):**  
-  ![Alibaba Cloud Deployment Proof](./alibaba-cloud-proof.png)
+  ![Alibaba Cloud Deployment Proof 1](./alibaba-cloud-proof-1.png)
+  ![Alibaba Cloud Deployment Proof 2](./alibaba-cloud-proof-2.png)
 
 ## Architecture
 
