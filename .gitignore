@@ -23,3 +23,5 @@ next-env.d.ts
 # OS
 Thumbs.db
 
+# Archives
+*.zip

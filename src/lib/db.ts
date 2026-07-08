@@ -3,8 +3,18 @@
 // Backend compute: Alibaba Cloud Function Compute (Web Function)
 import { PrismaClient } from '@prisma/client'
 
+let dbUrl = process.env.DATABASE_URL || '';
+if (dbUrl.startsWith('"') && dbUrl.endsWith('"')) dbUrl = dbUrl.slice(1, -1);
+if (dbUrl.startsWith("'") && dbUrl.endsWith("'")) dbUrl = dbUrl.slice(1, -1);
+
 const prismaClientSingleton = () => {
-  return new PrismaClient()
+  return new PrismaClient({
+    datasources: {
+      db: {
+        url: dbUrl
+      }
+    }
+  })
 }
 
 declare global {

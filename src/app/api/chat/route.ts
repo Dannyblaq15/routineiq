@@ -5,10 +5,14 @@ import { z } from 'zod';
 import { getMemory, updatePreferences } from '../../../lib/memoryStore';
 import db from '../../../lib/db';
 
+let qwenKey = process.env.QWEN_API_KEY || '';
+if (qwenKey.startsWith('"') && qwenKey.endsWith('"')) qwenKey = qwenKey.slice(1, -1);
+if (qwenKey.startsWith("'") && qwenKey.endsWith("'")) qwenKey = qwenKey.slice(1, -1);
+
 // Initialize Qwen using DashScope compatible endpoint for the specific workspace
 const qwen = createOpenAI({
   baseURL: process.env.QWEN_BASE_URL || 'https://ws-jacsvkmm61awec2s.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1',
-  apiKey: process.env.QWEN_API_KEY,
+  apiKey: qwenKey,
 });
 
 import { verifyAuth } from '../../../lib/auth';
@@ -151,8 +155,9 @@ ${memoryContext}`,
   } catch (error: any) {
     console.error('🔥 API Route Error:', error);
     require('fs').writeFileSync('debug-error.log', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+    const status = error.message.includes('Unauthorized') || error.message.includes('credentials') ? 401 : 400;
     return new Response(JSON.stringify({ error: error.message || 'Unknown error occurred in Qwen API' }), {
-      status: 500,
+      status: status,
       headers: { 'Content-Type': 'application/json' },
     });
   }

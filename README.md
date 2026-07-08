@@ -8,8 +8,8 @@ RoutineIQ is an AI-powered dermatology assistant that tracks routines and logs s
 - **Database:** ApsaraDB RDS Serverless (MySQL), auto-pause enabled
 - **AI Model:** Qwen Cloud API (Qwen-Max) via dashscope-intl.aliyuncs.com
 - **Networking:** Private VPC connecting Function Compute to RDS
-- **Live endpoint:** [your-function-endpoint-url]
-- **Proof of Alibaba Cloud usage:** [See src/lib/db.ts](https://github.com/USERNAME/routineiq/blob/main/src/lib/db.ts)
+- **Live endpoint:** https://routineiq-itblaotrkx.ap-southeast-1.fcapp.run
+- **Proof of Alibaba Cloud usage:** [See src/lib/db.ts](./src/lib/db.ts)
 
 ## Architecture
 

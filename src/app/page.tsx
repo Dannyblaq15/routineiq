@@ -241,8 +241,16 @@ export default function Page() {
                 height={22}
                 className="rounded-lg opacity-60 dark:opacity-40"
               />
-              <p className="text-[11px] text-slate-400 dark:text-slate-500">
-                © 2026 RoutineIQ · Powered by Qwen AI
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+                © 2026 RoutineIQ · Powered by Qwen AI on 
+                <a 
+                  href="https://www.alibabacloud.com/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="font-medium text-orange-500 hover:text-orange-600 dark:text-orange-400 dark:hover:text-orange-300 transition flex items-center"
+                >
+                  Alibaba Cloud
+                </a>
               </p>
             </div>
             <div className="flex items-center gap-4 text-[11px] text-slate-400 dark:text-slate-500">
