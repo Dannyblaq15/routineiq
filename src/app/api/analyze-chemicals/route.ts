@@ -7,7 +7,7 @@ export async function POST(req: Request) {
   try {
     const userId = await verifyAuth(req);
     const qwen = createOpenAI({
-      baseURL: process.env.QWEN_BASE_URL || 'https://ws-jacsvkmm61awec2s.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1',
+      baseURL: process.env.QWEN_BASE_URL || 'https://ws-8nvmb1m9ou8t76hn.cn-beijing.maas.aliyuncs.com/compatible-mode/v1',
       apiKey: process.env.QWEN_API_KEY,
     });
 

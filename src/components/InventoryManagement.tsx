@@ -12,6 +12,7 @@ interface InventoryManagementProps {
   items: InventoryItem[];
   onAddItem: (item: InventoryItem) => void;
   onDeleteItem: (id: string) => void;
+  onNavigate?: (screen: ScreenType) => void;
 }
 
 const DEFAULT_IMAGES = [
@@ -20,7 +21,9 @@ const DEFAULT_IMAGES = [
   'https://lh3.googleusercontent.com/aida-public/AB6AXuAgM-UVa6D5pfNagUCHhENPP_jD1gj8qnjFHm93UVC7N1zISJSUDrKoKA-OmJjZEIDesOwz7k8XkbFDzOG-4GM_5932ocpxGxjSumj01YnnokNyHeVQh0ZavcQt6WC3-tV9HrVc5-_RHf2azEFtbRXj0BIEZhq1ZYQ3PzG6s4yKTNkw24oGMuV9PPwwRIQUEOf5y3Ilz1-NM1z3OhazLdmNNScJ-QmluKwYN2fOMJrsqXs-A8RgVA8WWBPIFCYdcu3fzt9gCe9hak'
 ];
 
-export default function InventoryManagement({ items, onAddItem, onDeleteItem }: InventoryManagementProps) {
+import { ScreenType } from '../types';
+
+export default function InventoryManagement({ items, onAddItem, onDeleteItem, onNavigate }: InventoryManagementProps) {
   const [name, setName] = useState('');
   const [phase, setPhase] = useState('Treatment Phase');
   const [category, setCategory] = useState('Serum');
@@ -33,6 +36,7 @@ export default function InventoryManagement({ items, onAddItem, onDeleteItem }: 
   const [searchTerm, setSearchTerm] = useState('');
   
   const [isScanning, setIsScanning] = useState(false);
+  const [scannedImageUrl, setScannedImageUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,6 +51,8 @@ export default function InventoryManagement({ items, onAddItem, onDeleteItem }: 
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
+
+      setScannedImageUrl(base64Image);
 
       const res = await fetch('/api/scan-product', {
         method: 'POST',
@@ -91,10 +97,11 @@ export default function InventoryManagement({ items, onAddItem, onDeleteItem }: 
       tags: parsedTags.length ? parsedTags : ['Hyaluronic', 'Organic'],
       statusText,
       statusType,
-      imageUrl: randomImage
+      imageUrl: scannedImageUrl || randomImage
     };
 
     onAddItem(newItem);
+    setScannedImageUrl(null);
     
     // Log to memory timeline
     try {
@@ -176,6 +183,20 @@ export default function InventoryManagement({ items, onAddItem, onDeleteItem }: 
           </div>
 
           <form onSubmit={handleAddNewItem} className="space-y-4">
+            {/* Scanned Image Preview */}
+            {scannedImageUrl && (
+              <div className="relative w-full h-32 rounded-xl overflow-hidden border border-slate-200/60 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
+                <img src={scannedImageUrl} alt="Scanned product preview" className="h-full w-auto object-contain" />
+                <button
+                  type="button"
+                  onClick={() => setScannedImageUrl(null)}
+                  className="absolute top-2 right-2 p-1 bg-red-50 dark:bg-red-950/80 text-red-600 dark:text-red-400 rounded-full hover:bg-red-100 transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
             {/* Name */}
             <div className="space-y-1">
               <label htmlFor="prod-name" className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Product Name</label>
@@ -385,6 +406,21 @@ export default function InventoryManagement({ items, onAddItem, onDeleteItem }: 
               </span>
             </div>
 
+            {/* Connected Step prompt */}
+            {onNavigate && items.length > 0 && (
+              <div className="mt-4 bg-teal-50/50 dark:bg-teal-950/20 p-4 rounded-xl border border-teal-200/50 dark:border-teal-900/30 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-bold text-teal-850 dark:text-teal-300">Ready to optimize your routine?</p>
+                  <p className="text-[10px] text-teal-600/80 dark:text-teal-400 mt-0.5">Use your current products to generate a safe morning & evening schedule.</p>
+                </div>
+                <button
+                  onClick={() => onNavigate('agent-dashboard')}
+                  className="bg-teal-700 hover:bg-teal-800 text-white text-[11px] font-bold py-1.5 px-3 rounded-lg cursor-pointer transition shrink-0"
+                >
+                  Step 3: AI Dashboard →
+                </button>
+              </div>
+            )}
           </div>
 
           {/* List transition container */}

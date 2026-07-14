@@ -4,8 +4,8 @@
  */
 
 import { motion } from 'motion/react';
-import { pricingPlansList, testimonialsList, comparisonMetricsList } from '../data';
-import { Microscope, Brain, Package, Sparkles, TrendingUp, ShieldCheck, Check } from 'lucide-react';
+import Image from 'next/image';
+import { Microscope, Package, Sparkles, ShieldCheck, Check, AlertTriangle, FileText, BookOpen, CloudSun, Activity } from 'lucide-react';
 import { ScreenType } from '../types';
 
 interface LandingProps {
@@ -19,202 +19,207 @@ export default function Landing({ onScreenChange }: LandingProps) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -15 }}
       transition={{ duration: 0.35, ease: 'easeOut' }}
-      className="space-y-12 pb-16"
+      className="space-y-16 pb-16"
     >
       {/* Brand Hero Showcase */}
       <section 
-        className="relative overflow-hidden bg-radial from-teal-900/10 via-transparent to-transparent py-14 px-6 md:px-10 rounded-3xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900/80 shadow-md text-center max-w-5xl mx-auto"
+        className="relative overflow-hidden py-16 px-6 md:px-12 rounded-3xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900/80 shadow-md text-center max-w-5xl mx-auto"
         aria-labelledby="hero-heading"
       >
-        <div className="absolute top-4 right-4 bg-teal-100/80 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
-          <Sparkles className="w-3 h-3 text-teal-600 dark:text-teal-400" />
-          Clinical-Grade Intelligence
+        {/* Background Image Showcase */}
+        <div className="absolute inset-0 z-0 opacity-30 dark:opacity-25 pointer-events-none select-none">
+          <Image
+            src="/skincare-hero-bg.png"
+            alt="Skincare Laboratory Background"
+            fill
+            sizes="(max-width: 1024px) 100vw, 1024px"
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-slate-900 via-white/40 dark:via-slate-900/40 to-transparent" />
         </div>
 
-        <h2 
-          id="hero-heading" 
-          className="font-display font-black text-3xl md:text-5xl text-slate-900 dark:text-white leading-tight max-w-3xl mx-auto"
-        >
-          Diagnostic Extraction & Routine <span className="text-teal-700 dark:text-teal-400 underline decoration-teal-600/30">Formulary Matching</span>
-        </h2>
-        
-        <p className="mt-4 text-slate-600 dark:text-slate-300 text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
-          Unlock maximum cosmetic efficacy with high-density bio-informatic analysis. RoutineIQ extracts prescribing directives, identifies toxic chemical conflicts, and performs smart price optimization.
-        </p>
+        <div className="relative z-10">
+          <div className="flex justify-center mb-6">
+            <div className="bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 border border-teal-100 dark:border-teal-900/50">
+              <Sparkles className="w-3 h-3 text-teal-600 dark:text-teal-400" />
+              Your Everyday Skincare Guide
+            </div>
+          </div>
 
-        <div className="mt-8 flex flex-wrap justify-center gap-4">
-          <button
-            onClick={() => onScreenChange('analysis')}
-            className="px-6 py-3 bg-teal-700 hover:bg-teal-800 text-white font-medium text-sm rounded-xl transition duration-200 cursor-pointer shadow-md shadow-teal-700/10 flex items-center gap-2"
+          <h2 
+            id="hero-heading" 
+            className="font-display font-black text-3xl md:text-5.5xl text-slate-900 dark:text-white leading-tight max-w-3xl mx-auto tracking-tight"
           >
-            <Microscope className="w-4 h-4" />
-            Analyze Clinical Report
-          </button>
-          <button
-            onClick={() => onScreenChange('inventory')}
-            className="px-6 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-semibold text-sm rounded-xl transition duration-200 cursor-pointer border border-slate-200/50 dark:border-slate-700 flex items-center gap-2"
-          >
-            <Package className="w-4 h-4" />
-            Inventory & Compatibility
-          </button>
-        </div>
+            Skincare routines made simple, <span className="text-teal-700 dark:text-teal-400 underline decoration-teal-600/30">backed by real science</span>.
+          </h2>
+          
+          <p className="mt-5 text-slate-600 dark:text-slate-300 text-sm md:text-base max-w-2xl mx-auto leading-relaxed font-normal">
+            Stop guessing what goes on your face. RoutineIQ scans your skincare shelf, reads your dermatologist reports, and checks for toxic ingredient conflicts. It's your personal skin guide—no complicated medical jargon, just clean, personalized routines.
+          </p>
 
-        {/* Dynamic Trust Badges */}
-        <div className="mt-10 pt-8 border-t border-slate-100 dark:border-slate-800/80 grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="flex flex-col items-center">
-            <span className="font-display font-black text-2xl md:text-3xl text-teal-700 dark:text-teal-400">99.8%</span>
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider mt-1">Accuracy Grade</span>
-          </div>
-          <div className="flex flex-col items-center">
-            <span className="font-display font-black text-2xl md:text-3xl text-teal-700 dark:text-teal-400">&lt; 3.2s</span>
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider mt-1">Diagnostic Speed</span>
-          </div>
-          <div className="flex flex-col items-center">
-            <span className="font-display font-black text-2xl md:text-3xl text-teal-700 dark:text-teal-400">4,900+</span>
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider mt-1">Active Formularies</span>
-          </div>
-          <div className="flex flex-col items-center">
-            <span className="font-display font-black text-2xl md:text-3xl text-teal-700 dark:text-teal-400">100%</span>
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider mt-1">Conflict Checked</span>
-          </div>
-        </div>
-      </section>
-
-      {/* Primary Value Matrix */}
-      <section className="space-y-6 max-w-5xl mx-auto">
-        <div className="text-center">
-          <h3 className="font-display font-extrabold text-2xl text-slate-900 dark:text-white">The RoutineIQ Difference</h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider">Quantifiable results compiled over clinical research cohorts</p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Comparison Metrics List */}
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-4">
-            <h4 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-teal-600 dark:text-teal-400" />
-              Cohort Performance Metrics
-            </h4>
-            <div className="divide-y divide-slate-100 dark:divide-slate-800">
-              {comparisonMetricsList.map((metric, i) => (
-                <div key={i} className="py-3 flex items-center justify-between gap-4">
-                  <span className="font-medium text-sm text-slate-700 dark:text-slate-300">{metric.name}</span>
-                  <div className="flex items-center gap-2.5 text-xs">
-                    <span className="text-red-500 line-through font-mono">{metric.before}</span>
-                    <span className="text-teal-600 dark:text-teal-400 font-mono font-bold bg-teal-50 dark:bg-teal-950/50 px-2 py-0.5 rounded">
-                      {metric.after}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Core Innovation Columns */}
-          <div className="bg-teal-950/50 dark:bg-teal-950/20 p-6 rounded-2xl border border-teal-800/20 shadow-sm flex flex-col justify-between">
-            <div className="space-y-3">
-              <span className="bg-teal-800/10 text-teal-700 dark:text-teal-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider inline-block">
-                Advanced Molecular Parser
-              </span>
-              <h4 className="font-display font-bold text-lg text-teal-900 dark:text-teal-200">AI Chemist Collaboration</h4>
-              <p className="text-slate-600 dark:text-slate-300 text-xs leading-relaxed">
-                Our active deep learning transformer continuously matches and catalogs conflicts across pH ranges, ingredient families (like high concentration retinoids with acidic molecules), and light sensitivity profiles.
-              </p>
-            </div>
-            <div className="mt-6 pt-4 border-t border-teal-800/10 flex items-center gap-3">
-              <ShieldCheck className="w-8 h-8 text-teal-600 dark:text-teal-400 shrink-0" />
-              <p className="text-[11px] text-teal-700 dark:text-teal-300 font-medium">
-                Verified with dermatological standard protocols in 2026. Fully safe, science-backed skin architecture.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Tiers Section */}
-      <section className="space-y-6 max-w-5xl mx-auto" aria-labelledby="pricing-heading">
-        <div className="text-center">
-          <h3 id="pricing-heading" className="font-display font-extrabold text-2xl text-slate-900 dark:text-white">Precision Pricing Models</h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider">Enterprise & Clinic options tailored to medical diagnostics</p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-6">
-          {pricingPlansList.map((plan, idx) => (
-            <div
-              key={idx}
-              className={`bg-white dark:bg-slate-900 p-6 rounded-2xl border-2 transition-all hover:shadow-md relative flex flex-col justify-between
-                ${plan.isPopular 
-                  ? 'border-teal-600 dark:border-teal-400 shadow-sm' 
-                  : 'border-slate-200/60 dark:border-slate-800'
-                }`}
+          <div className="mt-8 flex flex-wrap justify-center gap-4">
+            <button
+              onClick={() => onScreenChange('analysis')}
+              className="px-6 py-3.5 bg-teal-700 hover:bg-teal-800 text-white font-semibold text-xs rounded-xl transition duration-200 cursor-pointer shadow-md shadow-teal-700/10 flex items-center gap-2"
             >
-              {plan.isPopular && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-teal-600 text-white dark:text-slate-900 dark:bg-teal-400 text-[10px] font-bold px-3 py-0.5 rounded-full uppercase tracking-wider">
-                  Recommended Choose
-                </span>
-              )}
-              
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-semibold text-slate-950 dark:text-white text-base">{plan.name}</h4>
-                  <div className="mt-2 flex items-baseline gap-1">
-                    <span className="font-display font-black text-3xl text-slate-950 dark:text-white">{plan.price}</span>
-                    <span className="text-slate-500 dark:text-slate-400 text-xs font-medium">{plan.period}</span>
-                  </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 min-h-[32px] leading-relaxed">{plan.description}</p>
-                </div>
-                
-                <ul className="space-y-2 py-3 border-t border-slate-100 dark:border-slate-800/80" aria-label={`Features included in ${plan.name} plan`}>
-                  {plan.features.map((feature, fIdx) => (
-                    <li key={fIdx} className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
-                      <Check className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <Microscope className="w-4 h-4" />
+              Analyze Clinical Report
+            </button>
+            <button
+              onClick={() => onScreenChange('inventory')}
+              className="px-6 py-3.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-semibold text-xs rounded-xl transition duration-200 cursor-pointer border border-slate-200/50 dark:border-slate-700 flex items-center gap-2"
+            >
+              <Package className="w-4 h-4" />
+              Inventory & Compatibility
+            </button>
+          </div>
 
-              <button
-                onClick={() => onScreenChange('analysis')}
-                className={`w-full py-2 px-4 rounded-xl text-xs font-semibold uppercase cursor-pointer transition
-                  ${plan.isPopular 
-                    ? 'bg-teal-700 hover:bg-teal-800 text-white' 
-                    : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-white'
-                  }`}
-              >
-                Activate {plan.name}
-              </button>
+          {/* Clean Humanlike Trust Badges */}
+          <div className="mt-12 pt-8 border-t border-slate-100 dark:border-slate-800/80 grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="flex flex-col items-center">
+              <span className="font-display font-black text-2xl text-teal-700 dark:text-teal-400">Zero Irritants</span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wider mt-1">Clashing actives flagged</span>
             </div>
-          ))}
+            <div className="flex flex-col items-center">
+              <span className="font-display font-black text-2xl text-teal-700 dark:text-teal-400">Instant Scan</span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wider mt-1">Just snap your shelf</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="font-display font-black text-2xl text-teal-700 dark:text-teal-400">Derm-Aligned</span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wider mt-1">Professional guidance</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="font-display font-black text-2xl text-teal-700 dark:text-teal-400">Clean Science</span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wider mt-1">No marketing-only claims</span>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Testimonials Banner */}
-      <section className="bg-slate-100/50 dark:bg-slate-900/50 p-8 rounded-3xl border border-slate-200/50 dark:border-slate-800 max-w-5xl mx-auto space-y-6">
+      {/* Narrative Features Showcase */}
+      <section className="space-y-8 max-w-5xl mx-auto">
         <div className="text-center">
-          <h3 className="font-display font-semibold text-lg text-slate-900 dark:text-white">Validation From Clinical Directors</h3>
+          <h3 className="font-display font-extrabold text-2xl md:text-3xl text-slate-900 dark:text-white tracking-tight">How we keep your skin healthy</h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-xl mx-auto leading-relaxed">
+            Simple steps to avoid irritation and get the absolute most out of your daily products.
+          </p>
         </div>
-        
-        <div className="grid md:grid-cols-2 gap-6">
-          {testimonialsList.map((test, i) => (
-            <div key={i} className="flex flex-col justify-between bg-white dark:bg-slate-950 p-6 rounded-2xl border border-slate-200/40 dark:border-slate-800/80 shadow-xs">
-              <p className="text-xs text-slate-600 dark:text-slate-300 italic leading-relaxed">
-                {test.text}
+
+        <div className="grid md:grid-cols-2 gap-8">
+          {/* Active Conflicts Card */}
+          <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm flex flex-col justify-between hover:-translate-y-0.5 transition-all duration-300">
+            <div className="space-y-4">
+              <div className="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <h4 className="font-display font-bold text-lg text-slate-900 dark:text-white">
+                Stop wasting money on products that clash
+              </h4>
+              <p className="text-slate-600 dark:text-slate-300 text-xs leading-relaxed">
+                Retinoids, Vitamin C, AHAs/BHAs—using them at the wrong times or together can cause redness, damage your skin barrier, or render the active ingredients completely useless. We analyze your shelf instantly to map out exactly when to use what.
               </p>
-              
-              <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-900 flex items-center gap-3">
-                <img
-                  src={test.imageUrl}
-                  alt={test.author}
-                  referrerPolicy="no-referrer"
-                  className="w-10 h-10 rounded-full object-cover shrink-0 border border-teal-500/10"
-                />
-                <div>
-                  <h4 className="font-bold text-xs text-slate-900 dark:text-white">{test.author}</h4>
-                  <p className="text-[10px] text-slate-400 font-medium">{test.role}</p>
-                </div>
+            </div>
+            
+            <div className="mt-8 pt-4 border-t border-slate-100 dark:border-slate-800/80">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">Common Clashes Checked</p>
+              <div className="flex flex-wrap gap-2">
+                <span className="text-[10px] bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 px-2.5 py-1 rounded-full font-medium border border-red-100 dark:border-red-900/30">Retinol + Vitamin C</span>
+                <span className="text-[10px] bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 px-2.5 py-1 rounded-full font-medium border border-red-100 dark:border-red-900/30">Salicylic Acid + Glycolic Acid</span>
+                <span className="text-[10px] bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 px-2.5 py-1 rounded-full font-medium border border-red-100 dark:border-red-900/30">Benzoyl Peroxide + Retinol</span>
               </div>
             </div>
-          ))}
+          </div>
+
+          {/* Report Translation Card */}
+          <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm flex flex-col justify-between hover:-translate-y-0.5 transition-all duration-300">
+            <div className="space-y-4">
+              <div className="w-10 h-10 rounded-2xl bg-teal-50 dark:bg-teal-950/30 flex items-center justify-center">
+                <FileText className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+              </div>
+              <h4 className="font-display font-bold text-lg text-slate-900 dark:text-white">
+                Translate your dermatologist reports
+              </h4>
+              <p className="text-slate-600 dark:text-slate-300 text-xs leading-relaxed">
+                Got a prescription or clinical report from your doctor? Upload it, and our clinical parser will automatically extract the core skin type recommendations, matching them with compatible products in your current shelf inventory.
+              </p>
+            </div>
+
+            <div className="mt-8 pt-4 border-t border-slate-100 dark:border-slate-800/80">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">How it works</p>
+              <ul className="space-y-2">
+                <li className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                  <span className="w-4 h-4 rounded-full bg-teal-50 dark:bg-teal-950/50 text-[10px] text-teal-600 dark:text-teal-400 flex items-center justify-center font-bold">1</span>
+                  <span>Upload a report or text description</span>
+                </li>
+                <li className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                  <span className="w-4 h-4 rounded-full bg-teal-50 dark:bg-teal-950/50 text-[10px] text-teal-600 dark:text-teal-400 flex items-center justify-center font-bold">2</span>
+                  <span>Scan or add the products on your shelf</span>
+                </li>
+                <li className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                  <span className="w-4 h-4 rounded-full bg-teal-50 dark:bg-teal-950/50 text-[10px] text-teal-600 dark:text-teal-400 flex items-center justify-center font-bold">3</span>
+                  <span>Get your tailored, conflict-free routine</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Active Skincare Memory Section */}
+      <section className="bg-slate-100/40 dark:bg-slate-900/30 p-8 md:p-10 rounded-3xl border border-slate-200/50 dark:border-slate-800 max-w-5xl mx-auto space-y-8">
+        <div className="text-center">
+          <div className="inline-flex items-center gap-1.5 bg-teal-50/50 dark:bg-teal-950/30 px-3 py-1 rounded-full text-[10px] text-teal-600 dark:text-teal-400 font-bold border border-teal-100/50 dark:border-teal-900/30">
+            <Sparkles className="w-3 h-3 text-teal-500" /> Active Skincare Memory
+          </div>
+          <h3 className="font-display font-extrabold text-2xl md:text-3xl text-slate-900 dark:text-white mt-3">An active memory for your skin's lifecycle</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 max-w-lg mx-auto leading-relaxed">
+            Skincare is a timeline, not a one-time check. RoutineIQ remembers your skin's history to protect your barrier dynamically.
+          </p>
+        </div>
+        
+        <div className="grid md:grid-cols-3 gap-6">
+          {/* Item 1: Reaction Log */}
+          <div className="bg-white dark:bg-slate-950 p-6 rounded-2xl border border-slate-200/40 dark:border-slate-800/80 shadow-xs hover:shadow-md transition duration-200 flex flex-col justify-between space-y-4">
+            <div className="space-y-3">
+              <div className="w-8 h-8 rounded-xl bg-teal-50 dark:bg-teal-950/50 flex items-center justify-center text-teal-600 dark:text-teal-400">
+                <BookOpen className="w-4.5 h-4.5" />
+              </div>
+              <h4 className="font-display font-bold text-sm text-slate-900 dark:text-white">Learn from past reactions</h4>
+              <p className="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed">
+                When your skin reacts to a product, log it in your memory. The AI agent flags those specific ingredients in any new products you scan, preventing future irritation.
+              </p>
+            </div>
+            <span className="text-[10px] font-bold text-teal-600 dark:text-teal-400 uppercase tracking-wider">Prevents Redness & Rash</span>
+          </div>
+
+          {/* Item 2: Weather Sync */}
+          <div className="bg-white dark:bg-slate-950 p-6 rounded-2xl border border-slate-200/40 dark:border-slate-800/80 shadow-xs hover:shadow-md transition duration-200 flex flex-col justify-between space-y-4">
+            <div className="space-y-3">
+              <div className="w-8 h-8 rounded-xl bg-teal-50 dark:bg-teal-950/50 flex items-center justify-center text-teal-600 dark:text-teal-400">
+                <CloudSun className="w-4.5 h-4.5" />
+              </div>
+              <h4 className="font-display font-bold text-sm text-slate-900 dark:text-white">Adjusts with local weather</h4>
+              <p className="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed">
+                Dry winter air and humid summer heat need different care. Your agent checks the season to recommend heavier barriers or lighter hydration as your environment shifts.
+              </p>
+            </div>
+            <span className="text-[10px] font-bold text-teal-600 dark:text-teal-400 uppercase tracking-wider">Protects Skin Barrier</span>
+          </div>
+
+          {/* Item 3: pH Balance */}
+          <div className="bg-white dark:bg-slate-950 p-6 rounded-2xl border border-slate-200/40 dark:border-slate-800/80 shadow-xs hover:shadow-md transition duration-200 flex flex-col justify-between space-y-4">
+            <div className="space-y-3">
+              <div className="w-8 h-8 rounded-xl bg-teal-50 dark:bg-teal-950/50 flex items-center justify-center text-teal-600 dark:text-teal-400">
+                <Activity className="w-4.5 h-4.5" />
+              </div>
+              <h4 className="font-display font-bold text-sm text-slate-900 dark:text-white">Maintains optimal pH level</h4>
+              <p className="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed">
+                Too many strong active acids or serums can strip your skin. RoutineIQ watches the total concentration across your day's routine to keep your pH natural and balanced.
+              </p>
+            </div>
+            <span className="text-[10px] font-bold text-teal-600 dark:text-teal-400 uppercase tracking-wider">Balances Acid & Moisture</span>
+          </div>
         </div>
       </section>
     </motion.div>

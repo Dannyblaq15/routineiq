@@ -31,6 +31,20 @@ export default function AgentChat({ onNavigate }: { onNavigate: (s: ScreenType) 
     }
   }, [messages]);
 
+const SCREEN_NAMES: Record<string, string> = {
+  'agent-dashboard': 'AI Dashboard',
+  'memory-timeline': 'My History',
+  'agent-insights': 'Agent Insights',
+  'chat': 'Ask Agent',
+  'analysis': 'Upload Report',
+  'inventory': 'My Products',
+  'settings': 'Settings'
+};
+
+  const cleanMessageText = (text: string) => {
+    return text.replace(/\[NAVIGATE:\s*[a-zA-Z-]+\]/g, '').trim();
+  };
+
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -95,17 +109,38 @@ export default function AgentChat({ onNavigate }: { onNavigate: (s: ScreenType) 
               }`}>
                 {m.role === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
               </div>
-              <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
-                m.role === 'user' 
-                  ? 'bg-slate-800 text-white dark:bg-slate-700' 
-                  : 'bg-slate-50 dark:bg-slate-800/50 text-slate-800 dark:text-slate-200 border border-slate-100 dark:border-slate-700/50'
-              }`}>
-                {m.parts?.map((part, i) => {
-                  if (part.type === 'text') return <span key={i}>{part.text}</span>;
-                  if (part.type === 'reasoning') return <div key={i} className="text-slate-400 italic text-xs mb-2">{part.text}</div>;
-                  return null;
-                }) || (m as any).content || (m as any).text}
-              </div>
+              {(() => {
+                const textContent = m.parts?.map(p => p.type === 'text' ? p.text : '').join('') || (m as any).content || (m as any).text || '';
+                const navMatch = textContent.match(/\[NAVIGATE:\s*([a-zA-Z-]+)\]/);
+                const navTarget = navMatch ? navMatch[1].trim() : null;
+
+                return (
+                  <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                    m.role === 'user' 
+                      ? 'bg-slate-800 text-white dark:bg-slate-700' 
+                      : 'bg-slate-50 dark:bg-slate-800/50 text-slate-800 dark:text-slate-200 border border-slate-100 dark:border-slate-700/50'
+                  }`}>
+                    <div>
+                      {m.parts?.map((part, i) => {
+                        if (part.type === 'text') return <span key={i}>{cleanMessageText(part.text)}</span>;
+                        if (part.type === 'reasoning') return <div key={i} className="text-slate-400 italic text-xs mb-2">{part.text}</div>;
+                        return null;
+                      }) || cleanMessageText((m as any).content || (m as any).text || '')}
+                    </div>
+
+                    {navTarget && (
+                      <div className="mt-3 pt-2.5 border-t border-slate-200/50 dark:border-slate-850 flex items-center">
+                        <button
+                          onClick={() => onNavigate(navTarget as any)}
+                          className="inline-flex items-center gap-1.5 bg-teal-50 dark:bg-teal-950/40 hover:bg-teal-100/50 dark:hover:bg-teal-900/30 text-teal-700 dark:text-teal-300 text-[10px] font-bold py-1.5 px-3 rounded-lg border border-teal-200/40 dark:border-teal-800/30 cursor-pointer transition"
+                        >
+                          Go to {SCREEN_NAMES[navTarget] || navTarget} →
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </motion.div>
           ))
         )}

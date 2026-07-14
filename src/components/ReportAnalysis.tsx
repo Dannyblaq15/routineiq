@@ -5,11 +5,12 @@
 
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Microscope, Brain, Upload, Sparkles, CheckCircle, AlertTriangle, Play, RefreshCw, FileText } from 'lucide-react';
+import { Microscope, Brain, Upload, Sparkles, CheckCircle, AlertTriangle, Play, RefreshCw, FileText, X } from 'lucide-react';
 import { PatientAnalysis } from '../types';
 
 interface ReportAnalysisProps {
   onAddAnalysis: (analysis: PatientAnalysis) => void;
+  onNavigate?: (screen: ScreenType) => void;
 }
 
 const PRESETS = [
@@ -41,8 +42,11 @@ WARNING: Do not combine Benzoyl Peroxide with Retinol in the same application wi
   }
 ];
 
-export default function ReportAnalysis({ onAddAnalysis }: ReportAnalysisProps) {
+import { ScreenType } from '../types';
+
+export default function ReportAnalysis({ onAddAnalysis, onNavigate }: ReportAnalysisProps) {
   const [inputText, setInputText] = useState('');
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [analysisSteps, setAnalysisSteps] = useState<string[]>([]);
@@ -65,10 +69,40 @@ export default function ReportAnalysis({ onAddAnalysis }: ReportAnalysisProps) {
     }
   };
 
-  const processUploadedFile = (fileName: string) => {
-    // Generate preset content based on file name or generic preset
-    const demoText = `PRE-EXTRACTED FILE DIRECTIVES (${fileName}):\n- Hyaluronic Hydra 2% Complex\n- Pure Vitamin C (L-Ascorbic) 10%\n- Prevent mixing Retinol with Vitamin C in PM phase.`;
-    setInputText(demoText);
+  const processUploadedFile = async (file: File) => {
+    const isImage = file.type.startsWith('image/');
+    const isText = file.type === 'text/plain' || file.name.endsWith('.txt');
+
+    if (isText) {
+      setUploadedImage(null);
+      try {
+        const text = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsText(file);
+        });
+        setInputText(text);
+      } catch (err) {
+        console.error('Error reading text file:', err);
+      }
+    } else if (isImage) {
+      try {
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        setUploadedImage(base64);
+        setInputText(`[IMAGE CLINICAL REPORT UPLOADED: ${file.name}]`);
+      } catch (err) {
+        console.error('Error reading image file:', err);
+      }
+    } else {
+      setUploadedImage(null);
+      setInputText(`[DOCUMENT UPLOADED: ${file.name}]\nPlease type or paste your clinical report text here to proceed with analysis.`);
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -77,13 +111,13 @@ export default function ReportAnalysis({ onAddAnalysis }: ReportAnalysisProps) {
     setDragActive(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0];
-      processUploadedFile(file.name);
+      processUploadedFile(file);
     }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      processUploadedFile(e.target.files[0].name);
+      processUploadedFile(e.target.files[0]);
     }
   };
 
@@ -92,6 +126,7 @@ export default function ReportAnalysis({ onAddAnalysis }: ReportAnalysisProps) {
   };
 
   const handleApplyPreset = (presetText: string) => {
+    setUploadedImage(null);
     setInputText(presetText);
     setOutcome(null);
   };
@@ -123,7 +158,10 @@ export default function ReportAnalysis({ onAddAnalysis }: ReportAnalysisProps) {
       const res = await fetch('/api/analyze-report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reportText: inputText })
+        body: JSON.stringify({ 
+          reportText: inputText,
+          image: uploadedImage
+        })
       });
       
       if (!res.ok) {
@@ -257,6 +295,22 @@ export default function ReportAnalysis({ onAddAnalysis }: ReportAnalysisProps) {
             <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Supports PDF, PNG, JPG, or TXT formats</p>
           </div>
 
+          {uploadedImage && (
+            <div className="relative w-full h-36 rounded-xl overflow-hidden border border-slate-200/60 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
+              <img src={uploadedImage} alt="Uploaded report preview" className="h-full w-auto object-contain" />
+              <button
+                type="button"
+                onClick={() => {
+                  setUploadedImage(null);
+                  setInputText('');
+                }}
+                className="absolute top-2 right-2 p-1 bg-red-50 dark:bg-red-950/80 text-red-600 dark:text-red-400 rounded-full hover:bg-red-100 transition-colors cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
           <div className="space-y-2">
             <label htmlFor="script-input" className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
               Or Paste Dermatological Script Text
@@ -366,6 +420,23 @@ export default function ReportAnalysis({ onAddAnalysis }: ReportAnalysisProps) {
                         <li key={idx}>{conf}</li>
                       ))}
                     </ul>
+                  </div>
+                )}
+
+                {onNavigate && (
+                  <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2.5">
+                    <button
+                      onClick={() => onNavigate('inventory')}
+                      className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[10px] font-bold py-1.5 px-2 rounded-lg cursor-pointer text-center transition"
+                    >
+                      Step 2: Add Products →
+                    </button>
+                    <button
+                      onClick={() => onNavigate('agent-dashboard')}
+                      className="flex-1 bg-teal-700 hover:bg-teal-800 text-white text-[10px] font-bold py-1.5 px-2 rounded-lg cursor-pointer text-center transition"
+                    >
+                      Step 3: Go to Dashboard →
+                    </button>
                   </div>
                 )}
               </motion.div>

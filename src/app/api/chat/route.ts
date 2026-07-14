@@ -11,7 +11,7 @@ if (qwenKey.startsWith("'") && qwenKey.endsWith("'")) qwenKey = qwenKey.slice(1,
 
 // Initialize Qwen using DashScope compatible endpoint for the specific workspace
 const qwen = createOpenAI({
-  baseURL: process.env.QWEN_BASE_URL || 'https://ws-jacsvkmm61awec2s.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1',
+  baseURL: process.env.QWEN_BASE_URL || 'https://ws-8nvmb1m9ou8t76hn.cn-beijing.maas.aliyuncs.com/compatible-mode/v1',
   apiKey: qwenKey,
 });
 
@@ -70,6 +70,16 @@ context and use it to personalize guidance over time.
   padding a short answer.
 - Bold only the 1-2 most important details (a number, a time, an action).
 - Skip the "Bottom line" summary unless the response is long enough to need one.
+
+## Autonomous Navigation (CRITICAL)
+If the user wants to view a specific screen, page, or perform an action that corresponds to one of the screens below (e.g., "show me my timeline", "go to my products", "upload a report", "show my dashboard", "open settings"), you MUST append the exact navigation command tag \`[NAVIGATE: <screen_id>]\` to the VERY END of your response (after all punctuation):
+- To go to report uploader: \`[NAVIGATE: analysis]\`
+- To go to product inventory/shelf: \`[NAVIGATE: inventory]\`
+- To go to routines dashboard: \`[NAVIGATE: agent-dashboard]\`
+- To go to memory timeline: \`[NAVIGATE: memory-timeline]\`
+- To go to insights review: \`[NAVIGATE: agent-insights]\`
+- To go to settings: \`[NAVIGATE: settings]\`
+Example: "Here are your products! [NAVIGATE: inventory]"
 
 ## Memory Usage
 

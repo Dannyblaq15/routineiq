@@ -1,19 +1,10 @@
-# RoutineIQ ✦ AI Skincare Copilot
+# RoutineIQ - System Architecture & Functional Summary
 
-RoutineIQ is a clinical-grade, multi-agent AI skincare copilot powered by **Alibaba Cloud Model Studio** and deployed on **Alibaba Cloud ECS**. The system features a persistent cross-session memory engine that learns patient skincare history, tracks routine progress, scans ingredients for molecular compatibility, and refines recommendations over time.
-
----
-
-## 🚀 Devpost Judging Checklist Status
-
-- [x] **Public Source Code Repository:** Fully public GitHub repository with an Apache-2.0 [LICENSE](./LICENSE) file.
-- [x] **System Architecture Diagram:** Detailed Mermaid flowchart mapping client, server, and model data flows.
-- [x] **Written Functional Summary:** Technical text breakdown of all components and features.
-- [x] **Alibaba Cloud Deployment Integration:** Optimized for hosting on Alibaba Cloud ECS Ubuntu instances.
+RoutineIQ is a clinical-grade, multi-agent AI skincare copilot powered by Alibaba Cloud Model Studio and deployed on Alibaba Cloud ECS. The system features a persistent cross-session memory engine that learns patient skincare history, tracks routine progress, scans ingredients for molecular compatibility, and refines recommendations over time.
 
 ---
 
-## 1. System Architecture
+## 1. System Architecture Diagram
 
 Below is the complete internal system architecture depicting data flow, model dependencies, and memory cycles:
 
@@ -82,8 +73,8 @@ graph TD
 
 2. **Optical Character Recognition (OCR) Product Label Scanner**
    * **Role**: Analyzes uploaded photos of skincare products.
-   * **Behavior**: Uses the `qwen3.5-ocr` vision model to extract the product name, application phase, key active ingredients, and calculate compatibility indices. 
-   * **Dynamic Fallback Presets**: If vision APIs are offline, it selects randomly from 10 popular real-world skincare products (like *CeraVe Hydrating Cleanser* or *The Ordinary Niacinamide*) to maintain a fully functional, organic UX.
+   * **Behavior**: Uses the `qwen3.5-ocr` vision model to extract the product name, application phase (e.g., Cleansing, Hydration, Treatment, Solar), key active ingredients (e.g., Niacinamide, Salicylic Acid, Ceramides), and calculate a molecular compatibility index based on the user's profile.
+   * **Dynamic Fallback Presets**: If vision APIs are offline, it selects randomly from 10 popular real-world skincare products (like *CeraVe Hydrating Cleanser* or *The Ordinary Niacinamide*) to maintain a functional, organic UX.
 
 3. **Persistent Memory Timeline (Cross-Session Experience)**
    * **Role**: Logs every key event (product addition, routine execution, lab report upload, skin condition change) into a permanent database timeline.
@@ -92,6 +83,10 @@ graph TD
 4. **Multi-Step Skincare Journey Timeline**
    * **Role**: Connects all pages (Dashboard, Report Upload, Inventory Shelf, Routine Timeline, Progress Chart, Agent Chat) into a single, cohesive workflow.
    * **Behavior**: Seamlessly shares active profile context between components, allowing changes on one page to immediately reflect in the Agent's recommendations and the general dashboard state.
+
+5. **Lab Report Analysis**
+   * **Role**: Extracts diagnostic information from uploaded dermatological or blood reports.
+   * **Behavior**: Analyzes markers (e.g., sebum levels, hydration indices, hormone balances) and updates the patient profile with targeted recommendations.
 
 ---
 
@@ -110,60 +105,15 @@ When the user queries the agent, the backend runs a **Memory Context Retriever**
 
 ### Context Compaction & Timely Forgetting
 To fit inside limited context windows:
-* **Compaction**: When the timeline grows too long, the system runs an offline/background summarization task using `qwen-plus`. It groups historical episodes into a single unified summary, deleting or archiving the raw, verbose logs while preserving the learned experiences.
+* **Compaction**: When the timeline grows too long, the system runs an offline/background summarization task using `qwen-plus`. It groups historical episodes into a single unified summary (e.g., *"Patient has a history of irritation with high-strength Retinol in month 1; transitioned successfully to Bakuchiol in month 2"*), deleting or archiving the raw, verbose logs while preserving the learned experiences.
 * **Timely Forgetting**: Minor logs (e.g., daily chat pleasantries or routine execution checklists from 6 months ago) are flagged for automatic deletion or reduced retrieval weight once they exceed their relevance period.
 
 ---
 
-## 4. Run Locally
+## 4. Alibaba Cloud Deployment Architecture
 
-**Prerequisites:** Node.js (Node 20+), Git
+RoutineIQ is hosted on **Alibaba Cloud ECS (Elastic Compute Service)** inside an Ubuntu 20.04/22.04 LTS instance, configured as follows:
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/Dannyblaq15/routineiq.git
-   cd routineiq
-   ```
-
-2. **Configure your Environment Variables:**
-   Create a `.env` file in the root of the project:
-   ```env
-   DATABASE_URL="mysql://username:password@localhost:3306/routineiq"
-   QWEN_API_KEY="your-qwen-api-key"
-   QWEN_BASE_URL="https://ws-8nvmb1m9ou8t76hn.cn-beijing.maas.aliyuncs.com/compatible-mode/v1"
-   ```
-
-3. **Install Dependencies & Generate Client:**
-   ```bash
-   npm install
-   npx prisma generate
-   ```
-
-4. **Run Development Server:**
-   ```bash
-   npm run dev
-   ```
-
----
-
-## 5. Alibaba Cloud Deployment (ECS Ubuntu)
-
-RoutineIQ is hosted on **Alibaba Cloud ECS (Elastic Compute Service)** inside an Ubuntu 20.04/22.04 LTS instance.
-
-### Automated Setup (Recommended)
-We have provided an automated script `setup-ecs-ubuntu.sh` in the root of the project. Run it on your ECS instance to automatically install Node.js 20 LTS, install Git & PM2, configure Nginx, and enable the firewall:
-
-```bash
-# Fetch and run the automated script directly
-curl -o setup-ecs-ubuntu.sh https://raw.githubusercontent.com/Dannyblaq15/routineiq/main/setup-ecs-ubuntu.sh
-chmod +x setup-ecs-ubuntu.sh
-sudo ./setup-ecs-ubuntu.sh
-```
-
-For manual configurations or Docker container details, please see [ECS_DEPLOYMENT.md](./ECS_DEPLOYMENT.md).
-
----
-
-## 📄 License
-
-This project is open-source and available under the terms of the [Apache License 2.0](./LICENSE).
+1. **VPC Network Isolation**: The ECS server resides in the same Private VPC as the **ApsaraDB RDS Serverless (MySQL)** instance.
+2. **Nginx Reverse Proxy**: Nginx listens on ports `80` (HTTP) and `443` (HTTPS) and proxies incoming web traffic to Next.js running locally on port `3000`.
+3. **PM2 Process Manager**: PM2 manages the `npm start` service, maintaining high availability with automatic recovery on system reboots or runtime errors.

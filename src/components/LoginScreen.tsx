@@ -6,7 +6,7 @@ import { auth, googleProvider, signInWithPopup, createUserWithEmailAndPassword, 
 import { motion, AnimatePresence } from 'motion/react';
 import { Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
 
-export default function LoginScreen() {
+export default function LoginScreen({ onBackToLanding }: { onBackToLanding?: () => void }) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [error, setError] = useState('');
@@ -71,6 +71,14 @@ export default function LoginScreen() {
         animate={{ opacity: 1, y: 0 }}
         className="max-w-[400px] w-full"
       >
+        {onBackToLanding && (
+          <button
+            onClick={onBackToLanding}
+            className="mb-4 flex items-center gap-1.5 text-xs font-semibold text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors"
+          >
+            ← Back to Home
+          </button>
+        )}
         {/* Logo Header */}
         <div className="text-center mb-8">
           <motion.div 

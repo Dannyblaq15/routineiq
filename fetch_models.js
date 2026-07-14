@@ -1,5 +1,5 @@
-const url = "https://ws-jacsvkmm61awec2s.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/models";
-const key = "sk-ws-H.YMLRIP.uvbw.MEUCIAaf5igyybe8V98FzJ2uxYMatlz2XiFuCDtXhpe8b7NYAiEAmMDcdVjHa6GxfSbLJ9b0BRFX0haBKN0R_PO952knIGQ";
+const url = "https://ws-8nvmb1m9ou8t76hn.cn-beijing.maas.aliyuncs.com/compatible-mode/v1/models";
+const key = "sk-ws-H.EDIXPYI.nfz4.MEQCICvWS7yryFvpRB7SAmclTJxKWXTkLKubMxPdFi3OQOi7AiAkni32Y3BuV7tT20Moc6YIocCzSvt37-fs1fA_aB0JQA";
 
 fetch(url, {
   headers: { "Authorization": `Bearer ${key}` }
