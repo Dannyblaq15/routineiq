@@ -1,5 +1,7 @@
 # RoutineIQ ✦ AI Skincare Copilot
 
+**Live Demo URL:** [https://routineiq.duckdns.org](https://routineiq.duckdns.org)
+
 RoutineIQ is a clinical-grade, multi-agent AI skincare copilot powered by **Alibaba Cloud Model Studio** and deployed on **Alibaba Cloud ECS**. The system features a persistent cross-session memory engine that learns patient skincare history, tracks routine progress, scans ingredients for molecular compatibility, and refines recommendations over time.
 
 ---
