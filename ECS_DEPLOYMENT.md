@@ -192,13 +192,63 @@ sudo systemctl restart nginx
 
 ---
 
-## 5. Enable SSL / HTTPS (Let's Encrypt)
+## 5. Configuring Custom Domain with DuckDNS (`routineiq.duckdns.org`)
 
-Secure your application with HTTPS using Certbot.
+DuckDNS is a free dynamic DNS service. Follow these steps to map `routineiq.duckdns.org` to your ECS instance:
 
-```bash
-sudo apt-get install -y certbot python3-certbot-nginx
-# Run Certbot to automatically configure SSL for Nginx
-sudo certbot --nginx -d yourdomain.com
-```
-Follow the interactive prompts. Certbot will obtain the SSL certificate and configure Nginx to force HTTPS.
+### Step A: Claim your Domain on DuckDNS
+1. Go to [DuckDNS](https://www.duckdns.org/) and sign in.
+2. Under **subdomains**, add a subdomain named `routineiq`.
+3. Put the **Public IP Address** of your Alibaba Cloud ECS instance in the IP box and click **update ip**.
+
+### Step B: Configure Automatic IP Updates on ECS (Optional but Recommended)
+If your ECS instance doesn't have a static EIP (Elastic IP) and changes on reboot, configure a cron job to update DuckDNS:
+1. Create a script directory:
+   ```bash
+   mkdir -p ~/duckdns && cd ~/duckdns
+   ```
+2. Create a script file `duck.sh`:
+   ```bash
+   nano duck.sh
+   ```
+3. Paste the following line (replace `YOUR-DUCKDNS-TOKEN` with the token shown on the DuckDNS homepage):
+   ```bash
+   echo url="https://www.duckdns.org/update?domains=routineiq&token=YOUR-DUCKDNS-TOKEN&ip=" | curl -k -o ~/duckdns/duck.log -K -
+   ```
+4. Set execution permissions:
+   ```bash
+   chmod 700 duck.sh
+   ```
+5. Add it to Crontab to run every 5 minutes:
+   ```bash
+   crontab -e
+   ```
+   Add this line at the bottom:
+   ```cron
+   */5 * * * * ~/duckdns/duck.sh >/dev/null 2>&1
+   ```
+
+---
+
+## 6. Enable SSL / HTTPS (Let's Encrypt for DuckDNS)
+
+Once `routineiq.duckdns.org` is successfully pointing to your ECS IP, secure the web app:
+
+1. Update your Nginx configuration at `/etc/nginx/sites-available/routineiq` to use the correct domain:
+   ```nginx
+   server_name routineiq.duckdns.org;
+   ```
+2. Test Nginx and restart:
+   ```bash
+   sudo nginx -t
+   ```
+   ```bash
+   sudo systemctl restart nginx
+   ```
+3. Install Certbot and run SSL generation:
+   ```bash
+   sudo apt-get install -y certbot python3-certbot-nginx
+   sudo certbot --nginx -d routineiq.duckdns.org
+   ```
+4. Follow the prompts. Certbot will automatically fetch the certificates from Let's Encrypt, configure the Nginx SSL parameters, and setup automatic renewal cron jobs.
+

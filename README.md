@@ -162,6 +162,11 @@ sudo ./setup-ecs-ubuntu.sh
 
 For manual configurations or Docker container details, please see [ECS_DEPLOYMENT.md](./ECS_DEPLOYMENT.md).
 
+### Proof of Deployment (ECS & PM2 Status)
+Below is the live execution state of the `routineiq` production process running online on the Alibaba Cloud ECS Ubuntu server:
+
+![ECS PM2 Deployment Proof](docs/assets/ecs_pm2_deployment_proof.png)
+
 ---
 
 ## 📄 License
